@@ -20,6 +20,9 @@ class Config(val m: Map<String, Double>) {
     val corr: Double get() = m.getValue("corr")
 }
 
+/** Une saisie de production réelle : réel mesuré et prévision brute (sans correction) du même jour. */
+data class Calib(val date: String, val real: Double, val base: Double)
+
 data class Day(
     val date: String, val g1: Double, val g2: Double, val sun: Double, val cloud: Double,
     /** Irradiance horaire (Wh/m²), index = heure de fin de l'intervalle (valeur de HH:00 = HH-1 → HH). */
@@ -119,7 +122,7 @@ object Store {
 
     fun updatedAt(ctx: Context): String = prefs(ctx).getString("updated", "–") ?: "–"
 
-    /** Applique une seule fois la calibration avec la mesure réelle de départ. */
+    /** Ajoute une seule fois la mesure réelle de départ à l'historique. */
     fun autoCalibrate(ctx: Context) {
         val p = prefs(ctx)
         if (p.getBoolean("calib_done", false)) return
@@ -127,7 +130,48 @@ object Store {
         val d = days(ctx).find { it.date == FIRST_CALIB_DATE } ?: return
         val base = Forecast.base(c, d)
         if (base <= 0.0) return
-        set(ctx, "corr", ((FIRST_CALIB_KWH / base) * 100).roundToInt() / 100.0)
+        addCalib(ctx, Calib(FIRST_CALIB_DATE, FIRST_CALIB_KWH, base))
         p.edit().putBoolean("calib_done", true).apply()
+    }
+
+    // ---------- Historique de calibration ----------
+
+    const val CALIB_WINDOW = 15
+
+    fun calibs(ctx: Context): List<Calib> {
+        val s = prefs(ctx).getString("calibs", null) ?: return emptyList()
+        return try {
+            val a = JSONArray(s)
+            (0 until a.length()).map {
+                val o = a.getJSONObject(it)
+                Calib(o.getString("date"), o.getDouble("real"), o.getDouble("base"))
+            }.sortedByDescending { it.date }
+        } catch (e: Exception) { emptyList() }
+    }
+
+    private fun saveCalibs(ctx: Context, list: List<Calib>) {
+        val a = JSONArray()
+        list.forEach { a.put(JSONObject().put("date", it.date).put("real", it.real).put("base", it.base)) }
+        prefs(ctx).edit().putString("calibs", a.toString()).apply()
+        recompute(ctx, list)
+    }
+
+    /** Ajoute ou remplace la saisie de ce jour. */
+    fun addCalib(ctx: Context, c: Calib) =
+        saveCalibs(ctx, calibs(ctx).filter { it.date != c.date } + c)
+
+    fun removeCalib(ctx: Context, date: String) =
+        saveCalibs(ctx, calibs(ctx).filter { it.date != date })
+
+    /** Facteur = total réel ÷ total prévu sur les dernières saisies (les beaux jours pèsent plus). */
+    fun factor(list: List<Calib>): Double? {
+        val used = list.sortedByDescending { it.date }.take(CALIB_WINDOW)
+        val b = used.sumOf { it.base }
+        if (used.isEmpty() || b <= 0.0) return null
+        return ((used.sumOf { it.real } / b) * 100).roundToInt() / 100.0
+    }
+
+    private fun recompute(ctx: Context, list: List<Calib>) {
+        set(ctx, "corr", factor(list) ?: 1.0)
     }
 }

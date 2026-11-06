@@ -50,6 +50,8 @@ class MainActivity : Activity() {
     private lateinit var address: EditText
     private lateinit var placeOut: TextView
     private lateinit var batteryLabel: TextView
+    private lateinit var calSummary: TextView
+    private lateinit var calList: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +74,8 @@ class MainActivity : Activity() {
         address = findViewById(R.id.address)
         placeOut = findViewById(R.id.placeOut)
         batteryLabel = findViewById(R.id.batteryLabel)
+        calSummary = findViewById(R.id.calSummary)
+        calList = findViewById(R.id.calList)
         findViewById<View>(R.id.batteryBox).setOnClickListener { editLevel() }
 
         buildSettings()
@@ -181,6 +185,7 @@ class MainActivity : Activity() {
         fields.forEach { (k, e) -> e.setText(fmtField(c.m.getValue(k))) }
         subtitle.text = "${place(c)} · ${f1(c.p1 + c.p2)} kWc · batterie ${f1(c.bat)} kWh"
         placeOut.text = "📍 ${place(c)} (${String.format(fr, "%.4f, %.4f", c.lat, c.lon)})"
+        renderCalibs()
         settingsSummary.text = "${f1(c.p1)} kWc à ${c.a1.roundToInt()}° + ${f1(c.p2)} kWc à ${c.a2.roundToInt()}°"
     }
 
@@ -315,6 +320,64 @@ class MainActivity : Activity() {
         }.start()
     }
 
+    private fun renderCalibs() {
+        calList.removeAllViews()
+        val list = Store.calibs(this)
+        val f = Store.factor(list)
+        if (list.isEmpty() || f == null) {
+            calSummary.visibility = View.GONE
+            return
+        }
+        val n = list.size.coerceAtMost(Store.CALIB_WINDOW)
+        calSummary.visibility = View.VISIBLE
+        calSummary.text = "Correction ×${String.format(fr, "%.2f", f)} · moyenne sur $n jour${if (n > 1) "s" else ""}" +
+            if (n < 5) "\nAjoute quelques jours de plus pour une correction fiable." else ""
+
+        val dp = resources.displayMetrics.density
+        val fmt = DateTimeFormatter.ofPattern("EEE d MMM", fr)
+        list.take(Store.CALIB_WINDOW).forEach { c ->
+            calList.addView(View(this).apply { setBackgroundColor(getColor(R.color.line)) },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (1 * dp).toInt().coerceAtLeast(1))
+                    .apply { topMargin = (8 * dp).toInt() })
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(0, (8 * dp).toInt(), 0, 0)
+            }
+            val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            texts.addView(TextView(this).apply {
+                text = LocalDate.parse(c.date).format(fmt).replaceFirstChar { it.uppercase() }
+                setTextColor(getColor(R.color.fg))
+                textSize = 14f
+            })
+            texts.addView(TextView(this).apply {
+                text = "Réel ${f1(c.real)} kWh · prévu ${f1(c.base)} kWh"
+                setTextColor(getColor(R.color.muted))
+                textSize = 12f
+            })
+            row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(TextView(this).apply {
+                text = if (c.base > 0) "×${String.format(fr, "%.2f", c.real / c.base)}" else "–"
+                setTextColor(getColor(R.color.sun))
+                textSize = 14f
+                setPadding((8 * dp).toInt(), 0, (8 * dp).toInt(), 0)
+            })
+            row.addView(TextView(this).apply {
+                text = "✕"
+                textSize = 16f
+                gravity = android.view.Gravity.CENTER
+                setTextColor(getColor(R.color.muted))
+                setBackgroundResource(R.drawable.round_btn)
+                contentDescription = "Supprimer cette saisie"
+                setOnClickListener {
+                    Store.removeCalib(this@MainActivity, c.date)
+                    fillFields(); show(); SolarWidget.refreshAll(this@MainActivity)
+                }
+            }, LinearLayout.LayoutParams((36 * dp).toInt(), (36 * dp).toInt()))
+            calList.addView(row)
+        }
+    }
+
     private fun editLevel() {
         val dlg = android.app.Dialog(this)
         dlg.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
@@ -375,9 +438,9 @@ class MainActivity : Activity() {
             calOut.text = "Pas de rayonnement prévu ce jour-là, choisis un autre jour."
             return
         }
-        val corr = ((value / base) * 100).roundToInt() / 100.0
-        Store.set(this, "corr", corr)
-        calOut.text = "Prévisions ajustées (×${String.format(fr, "%.2f", corr)})."
+        Store.addCalib(this, Calib(date, value, base))
+        val n = Store.calibs(this).size.coerceAtMost(Store.CALIB_WINDOW)
+        calOut.text = "Enregistré. Correction calculée sur $n jour${if (n > 1) "s" else ""}."
         calKwh.setText("")
         fillFields()
         show()
