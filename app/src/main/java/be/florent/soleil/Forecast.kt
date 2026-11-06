@@ -5,6 +5,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 object Forecast {
     /** Pertes onduleur, câbles, température. */
@@ -29,16 +30,18 @@ object Forecast {
         }
     }
 
-    /** Somme de l'irradiance horaire par jour, en Wh/m². */
-    private fun perDay(j: JSONObject): Map<String, Double> {
+    /** Irradiance horaire par jour (24 valeurs, Wh/m²). */
+    private fun hourly(j: JSONObject): Map<String, DoubleArray> {
         val h = j.getJSONObject("hourly")
         val t = h.getJSONArray("time")
         val g = h.getJSONArray("global_tilted_irradiance")
-        val m = LinkedHashMap<String, Double>()
+        val m = LinkedHashMap<String, DoubleArray>()
         for (i in 0 until t.length()) {
-            val d = t.getString(i).substring(0, 10)
+            val ts = t.getString(i)
+            val d = ts.substring(0, 10)
+            val hour = ts.substring(11, 13).toInt()
             val v = if (g.isNull(i)) 0.0 else g.getDouble(i)
-            m[d] = (m[d] ?: 0.0) + v
+            m.getOrPut(d) { DoubleArray(24) }[hour] = v
         }
         return m
     }
@@ -46,8 +49,8 @@ object Forecast {
     fun fetch(c: Config): List<Day> {
         val j1 = fetchArray(c, c.a1)
         val j2 = fetchArray(c, c.a2)
-        val g1 = perDay(j1)
-        val g2 = perDay(j2)
+        val g1 = hourly(j1)
+        val g2 = hourly(j2)
         val daily = j1.getJSONObject("daily")
         val time = daily.getJSONArray("time")
         val sun = daily.getJSONArray("sunshine_duration")
@@ -56,10 +59,12 @@ object Forecast {
             val d = time.getString(i)
             Day(
                 date = d,
-                g1 = g1[d] ?: 0.0,
-                g2 = g2[d] ?: 0.0,
+                g1 = g1[d]?.sum() ?: 0.0,
+                g2 = g2[d]?.sum() ?: 0.0,
                 sun = if (sun.isNull(i)) 0.0 else sun.getDouble(i) / 3600.0,
-                cloud = if (cloud.isNull(i)) 0.0 else cloud.getDouble(i)
+                cloud = if (cloud.isNull(i)) 0.0 else cloud.getDouble(i),
+                h1 = g1[d]?.toList() ?: emptyList(),
+                h2 = g2[d]?.toList() ?: emptyList()
             )
         }
     }
@@ -71,6 +76,36 @@ object Forecast {
     fun battPct(c: Config, kwh: Double): Double {
         if (c.bat <= 0.0) return 0.0
         return ((kwh - c.conso) / c.bat).coerceIn(0.0, 1.0)
+    }
+
+    /**
+     * Niveau prévu en fin de journée à partir d'un niveau saisi à un moment donné.
+     * Ne compte que le soleil restant après ce moment, et la part de conso correspondante.
+     */
+    fun endLevel(c: Config, d: Day, startPct: Double, startMillis: Long): Double? {
+        if (d.h1.size < 24 || d.h2.size < 24 || c.bat <= 0.0) return null
+        val t = java.time.Instant.ofEpochMilli(startMillis).atZone(java.time.ZoneId.systemDefault())
+        val startH = t.hour + t.minute / 60.0
+        var total = 0.0
+        var rem = 0.0
+        for (i in 0 until 24) {
+            val e = (d.h1[i] / 1000.0) * c.p1 + (d.h2[i] / 1000.0) * c.p2
+            total += e
+            rem += e * (i - startH).coerceIn(0.0, 1.0)
+        }
+        val prodRem = rem * PR * c.corr
+        val consoRem = if (total > 0) c.conso * (rem / total) else 0.0
+        return (startPct + (prodRem - consoRem) / c.bat).coerceIn(0.0, 1.0)
+    }
+
+    fun levelVerdict(startPct: Double, end: Double): String {
+        val s = (startPct * 100).roundToInt()
+        val e = (end * 100).roundToInt()
+        return when {
+            end >= 0.995 -> "Batterie à $s % : pleine avant ce soir"
+            e > s + 1 -> "Batterie à $s % → ≈ $e % ce soir"
+            else -> "Batterie à $s % : pas de recharge d'ici ce soir"
+        }
     }
 
     fun verdict(c: Config, kwh: Double): String {

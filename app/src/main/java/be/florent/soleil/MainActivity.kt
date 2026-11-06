@@ -49,6 +49,7 @@ class MainActivity : Activity() {
     private lateinit var refreshBtn: ImageButton
     private lateinit var address: EditText
     private lateinit var placeOut: TextView
+    private lateinit var batteryLabel: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,6 +71,8 @@ class MainActivity : Activity() {
         refreshBtn = findViewById(R.id.refresh)
         address = findViewById(R.id.address)
         placeOut = findViewById(R.id.placeOut)
+        batteryLabel = findViewById(R.id.batteryLabel)
+        findViewById<View>(R.id.batteryBox).setOnClickListener { editLevel() }
 
         buildSettings()
 
@@ -205,9 +208,21 @@ class MainActivity : Activity() {
         val p = Forecast.battPct(c, k)
         kwh.text = f1(k)
         meta.text = "${sky(t)}  ${f1(t.sun)} h de soleil · ${t.cloud.roundToInt()} % de nuages"
-        battery.setLevel(p.toFloat())
-        verdict.text = Forecast.verdict(c, k)
-        val good = k - c.conso > 0.5
+        val lvl = Store.level(this)
+        val end = lvl?.let { Forecast.endLevel(c, t, it.first / 100.0, it.second) }
+        val good: Boolean
+        if (lvl != null && end != null) {
+            val start = lvl.first / 100.0
+            battery.setLevel(end.toFloat())
+            batteryLabel.text = "ce soir · ✎"
+            verdict.text = Forecast.levelVerdict(start, end)
+            good = end > start + 0.01 || end >= 0.995
+        } else {
+            battery.setLevel(p.toFloat())
+            batteryLabel.text = "✎ Régler"
+            verdict.text = Forecast.verdict(c, k)
+            good = k - c.conso > 0.5
+        }
         verdict.setBackgroundResource(if (good) R.drawable.pill_good else R.drawable.pill_low)
         verdict.setTextColor(getColor(if (good) R.color.batt else R.color.sun))
 
@@ -298,6 +313,33 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
+    }
+
+    private fun editLevel() {
+        val dlg = android.app.Dialog(this)
+        dlg.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        dlg.setContentView(R.layout.dialog_level)
+        dlg.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dlg.window?.setLayout((resources.displayMetrics.widthPixels * 0.92).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT)
+        val seek = dlg.findViewById<android.widget.SeekBar>(R.id.lSeek)
+        val value = dlg.findViewById<TextView>(R.id.lValue)
+        seek.progress = Store.level(this)?.first?.roundToInt() ?: 50
+        value.text = "${seek.progress} %"
+        seek.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(s: android.widget.SeekBar, v: Int, fromUser: Boolean) { value.text = "$v %" }
+            override fun onStartTrackingTouch(s: android.widget.SeekBar) {}
+            override fun onStopTrackingTouch(s: android.widget.SeekBar) {}
+        })
+        dlg.findViewById<Button>(R.id.lMinus).setOnClickListener { seek.progress = (seek.progress - 5).coerceAtLeast(0) }
+        dlg.findViewById<Button>(R.id.lPlus).setOnClickListener { seek.progress = (seek.progress + 5).coerceAtMost(100) }
+        dlg.findViewById<Button>(R.id.lClear).setOnClickListener {
+            Store.clearLevel(this); show(); SolarWidget.refreshAll(this); dlg.dismiss()
+        }
+        dlg.findViewById<Button>(R.id.lSave).setOnClickListener {
+            Store.setLevel(this, seek.progress.toDouble()); show(); SolarWidget.refreshAll(this); dlg.dismiss()
+        }
+        dlg.show()
     }
 
     private fun applyMeasure(key: String, v: Double) {

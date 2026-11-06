@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/card_bg"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        style="@style/CardTitle"
+        android:text="Niveau actuel de la batterie" />
+
+    <TextView
+        android:id="@+id/lValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="@color/batt"
+        android:textSize="56sp"
+        android:textStyle="bold" />
+
+    <SeekBar
+        android:id="@+id/lSeek"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:max="100"
+        android:progressBackgroundTint="@color/card2"
+        android:progressTint="@color/batt"
+        android:thumbTint="@color/batt" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/lMinus"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/input_bg"
+            android:stateListAnimator="@null"
+            android:text="− 5 %"
+            android:textAllCaps="false"
+            android:textColor="@color/fg" />
+
+        <Button
+            android:id="@+id/lPlus"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/input_bg"
+            android:stateListAnimator="@null"
+            android:text="+ 5 %"
+            android:textAllCaps="false"
+            android:textColor="@color/fg" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/Body"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:text="Lis le pourcentage sur l'appli de ton onduleur. L'appli calcule le niveau prévu ce soir avec le soleil restant. La valeur est oubliée à minuit." />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/lClear"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/input_bg"
+            android:stateListAnimator="@null"
+            android:text="Effacer"
+            android:textAllCaps="false"
+            android:textColor="@color/fg"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/lSave"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:text="Enregistrer" />
+    </LinearLayout>
+</LinearLayout>

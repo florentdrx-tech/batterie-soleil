@@ -20,7 +20,11 @@ class Config(val m: Map<String, Double>) {
     val corr: Double get() = m.getValue("corr")
 }
 
-data class Day(val date: String, val g1: Double, val g2: Double, val sun: Double, val cloud: Double)
+data class Day(
+    val date: String, val g1: Double, val g2: Double, val sun: Double, val cloud: Double,
+    /** Irradiance horaire (Wh/m²), index = heure de fin de l'intervalle (valeur de HH:00 = HH-1 → HH). */
+    val h1: List<Double> = emptyList(), val h2: List<Double> = emptyList()
+)
 
 object Store {
     val DEFAULTS: LinkedHashMap<String, Double> = linkedMapOf(
@@ -60,7 +64,8 @@ object Store {
         val arr = JSONArray()
         days.forEach {
             arr.put(JSONObject().put("date", it.date).put("g1", it.g1).put("g2", it.g2)
-                .put("sun", it.sun).put("cloud", it.cloud))
+                .put("sun", it.sun).put("cloud", it.cloud)
+                .put("h1", JSONArray(it.h1)).put("h2", JSONArray(it.h2)))
         }
         prefs(ctx).edit()
             .putString("days", arr.toString())
@@ -75,7 +80,8 @@ object Store {
             (0 until arr.length()).map {
                 val o = arr.getJSONObject(it)
                 Day(o.getString("date"), o.getDouble("g1"), o.getDouble("g2"),
-                    o.getDouble("sun"), o.getDouble("cloud"))
+                    o.getDouble("sun"), o.getDouble("cloud"),
+                    list(o.optJSONArray("h1")), list(o.optJSONArray("h2")))
             }
         } catch (e: Exception) { emptyList() }
     }
@@ -91,6 +97,25 @@ object Store {
     }
 
     fun clearPlace(ctx: Context) = prefs(ctx).edit().remove("place").apply()
+
+    private fun list(a: JSONArray?): List<Double> =
+        if (a == null) emptyList() else (0 until a.length()).map { a.optDouble(it, 0.0) }
+
+    /** Niveau de batterie saisi à la main : valable seulement le jour même. */
+    fun setLevel(ctx: Context, pct: Double) {
+        prefs(ctx).edit().putString("lvl", pct.toString())
+            .putLong("lvl_t", System.currentTimeMillis()).apply()
+    }
+
+    fun clearLevel(ctx: Context) = prefs(ctx).edit().remove("lvl").remove("lvl_t").apply()
+
+    fun level(ctx: Context): Pair<Double, Long>? {
+        val p = prefs(ctx)
+        val v = p.getString("lvl", null)?.toDoubleOrNull() ?: return null
+        val t = p.getLong("lvl_t", 0L)
+        val day = java.time.Instant.ofEpochMilli(t).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+        return if (day == java.time.LocalDate.now()) Pair(v, t) else null
+    }
 
     fun updatedAt(ctx: Context): String = prefs(ctx).getString("updated", "–") ?: "–"
 
