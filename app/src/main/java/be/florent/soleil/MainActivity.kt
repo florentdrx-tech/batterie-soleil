@@ -141,8 +141,31 @@ class MainActivity : Activity() {
                     setSingleLine(true)
                 }
                 cell.addView(label)
-                cell.addView(field, LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+                val icon = when (key) { "a1", "a2" -> "🧭"; "tilt" -> "📐"; else -> null }
+                if (icon == null) {
+                    cell.addView(field, LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+                } else {
+                    val line = LinearLayout(this).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = android.view.Gravity.CENTER_VERTICAL
+                    }
+                    line.addView(field, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                    val btn = TextView(this).apply {
+                        text = icon
+                        textSize = 20f
+                        gravity = android.view.Gravity.CENTER
+                        setBackgroundResource(R.drawable.round_btn)
+                        contentDescription = if (key == "tilt") "Mesurer l'inclinaison" else "Mesurer l'orientation"
+                        setOnClickListener {
+                            MeasureDialog(this@MainActivity, key == "tilt") { v -> applyMeasure(key, v) }.show()
+                        }
+                    }
+                    val size = (44 * dp).toInt()
+                    line.addView(btn, LinearLayout.LayoutParams(size, size).apply { marginStart = (6 * dp).toInt() })
+                    cell.addView(line, LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+                }
                 row.addView(cell, lp)
                 fields[key] = field
             }
@@ -275,6 +298,14 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
+    }
+
+    private fun applyMeasure(key: String, v: Double) {
+        Store.set(this, key, v)
+        fillFields()
+        placeOut.text = if (key == "tilt") "Inclinaison enregistrée : ${v.roundToInt()}°"
+            else "Orientation enregistrée : ${v.roundToInt()}° (${MeasureDialog.cardinal(v.roundToInt())})"
+        refresh()
     }
 
     private fun pickDate() {

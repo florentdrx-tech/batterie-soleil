@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/card_bg"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/mTitle"
+        style="@style/CardTitle" />
+
+    <be.florent.soleil.CompassView
+        android:id="@+id/dial"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        android:layout_marginTop="12dp" />
+
+    <TextView
+        android:id="@+id/mValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-condensed"
+        android:text="…"
+        android:textColor="@color/sun"
+        android:textSize="48sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/mSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/fg"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/mAcc"
+        style="@style/Body"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/pill_low"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Boussole imprécise : fais quelques grands 8 en l'air avec le téléphone pour la calibrer."
+        android:textColor="@color/sun"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/mHint"
+        style="@style/Body"
+        android:layout_marginTop="12dp"
+        android:gravity="center" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/mCancel"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/input_bg"
+            android:stateListAnimator="@null"
+            android:text="Annuler"
+            android:textAllCaps="false"
+            android:textColor="@color/fg"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/mUse"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:text="Utiliser" />
+    </LinearLayout>
+</LinearLayout>
