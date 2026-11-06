@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="icon_bg">#14202B</color>
+    <color name="bg">#0F1720</color>
+    <color name="card">#18232E</color>
+    <color name="card2">#22303C</color>
+    <color name="line">#2A3844</color>
+    <color name="fg">#EAF0F2</color>
+    <color name="muted">#8FA0AA</color>
+    <color name="sun">#F2B632</color>
+    <color name="sun_dim">#3D3115</color>
+    <color name="batt">#4CC283</color>
+    <color name="batt_dim">#173527</color>
+    <color name="ink">#0F1720</color>
 </resources>
