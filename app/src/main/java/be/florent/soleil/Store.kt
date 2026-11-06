@@ -80,6 +80,18 @@ object Store {
         } catch (e: Exception) { emptyList() }
     }
 
+    fun placeName(ctx: Context): String? = prefs(ctx).getString("place", null)
+
+    fun setPlace(ctx: Context, p: Place) {
+        prefs(ctx).edit()
+            .putString("place", p.name)
+            .putString("lat", p.lat.toString())
+            .putString("lon", p.lon.toString())
+            .apply()
+    }
+
+    fun clearPlace(ctx: Context) = prefs(ctx).edit().remove("place").apply()
+
     fun updatedAt(ctx: Context): String = prefs(ctx).getString("updated", "–") ?: "–"
 
     /** Applique une seule fois la calibration avec la mesure réelle de départ. */

@@ -292,6 +292,43 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
+                <TextView
+                    style="@style/Label"
+                    android:layout_marginBottom="6dp"
+                    android:text="Adresse de l'installation" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/address"
+                        style="@style/Field"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:hint="Rue, numéro, commune"
+                        android:imeOptions="actionSearch"
+                        android:inputType="textPostalAddress" />
+
+                    <Button
+                        android:id="@+id/findBtn"
+                        style="@style/PrimaryButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:minWidth="0dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:text="Chercher" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/placeOut"
+                    style="@style/Body"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="16dp" />
+
                 <LinearLayout
                     android:id="@+id/settingsGrid"
                     android:layout_width="match_parent"

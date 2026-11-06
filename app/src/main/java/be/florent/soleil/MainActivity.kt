@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
@@ -45,6 +47,8 @@ class MainActivity : Activity() {
     private lateinit var settingsSummary: TextView
     private lateinit var chevron: TextView
     private lateinit var refreshBtn: ImageButton
+    private lateinit var address: EditText
+    private lateinit var placeOut: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,10 +68,16 @@ class MainActivity : Activity() {
         settingsSummary = findViewById(R.id.settingsSummary)
         chevron = findViewById(R.id.chevron)
         refreshBtn = findViewById(R.id.refresh)
+        address = findViewById(R.id.address)
+        placeOut = findViewById(R.id.placeOut)
 
         buildSettings()
 
         refreshBtn.setOnClickListener { refresh() }
+        findViewById<Button>(R.id.findBtn).setOnClickListener { findAddress() }
+        address.setOnEditorActionListener { _, id, _ ->
+            if (id == EditorInfo.IME_ACTION_SEARCH) { findAddress(); true } else false
+        }
         findViewById<Button>(R.id.calBtn).setOnClickListener { calibrate() }
         findViewById<Button>(R.id.saveBtn).setOnClickListener { save() }
         findViewById<View>(R.id.settingsHeader).setOnClickListener {
@@ -102,7 +112,7 @@ class MainActivity : Activity() {
         else -> "☁️"
     }
 
-    private fun place(c: Config): String =
+    private fun place(c: Config): String = Store.placeName(this) ?:
         if (abs(c.lat - 50.41) < 0.05 && abs(c.lon - 4.59) < 0.05) "Aiseau"
         else String.format(fr, "%.2f, %.2f", c.lat, c.lon)
 
@@ -144,6 +154,7 @@ class MainActivity : Activity() {
         val c = Store.load(this)
         fields.forEach { (k, e) -> e.setText(fmtField(c.m.getValue(k))) }
         subtitle.text = "${place(c)} · ${f1(c.p1 + c.p2)} kWc · batterie ${f1(c.bat)} kWh"
+        placeOut.text = "📍 ${place(c)} (${String.format(fr, "%.4f, %.4f", c.lat, c.lon)})"
         settingsSummary.text = "${f1(c.p1)} kWc à ${c.a1.roundToInt()}° + ${f1(c.p2)} kWc à ${c.a2.roundToInt()}°"
     }
 
@@ -240,6 +251,32 @@ class MainActivity : Activity() {
         }.start()
     }
 
+    private fun findAddress() {
+        val q = address.text.toString().trim()
+        if (q.isEmpty()) {
+            placeOut.text = "Entre une adresse ou une commune."
+            return
+        }
+        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+            .hideSoftInputFromWindow(address.windowToken, 0)
+        placeOut.text = "Recherche de l'adresse…"
+        val act = this
+        Thread {
+            val p = Geo.find(act, q)
+            runOnUiThread {
+                if (p == null) {
+                    placeOut.text = "Adresse introuvable. Essaie avec la commune et le code postal."
+                } else {
+                    Store.setPlace(act, p)
+                    address.setText("")
+                    fillFields()
+                    placeOut.text = "📍 ${p.name} — enregistré (${String.format(fr, "%.4f, %.4f", p.lat, p.lon)})"
+                    refresh()
+                }
+            }
+        }.start()
+    }
+
     private fun pickDate() {
         val cur = runCatching { LocalDate.parse(calDate.text.toString()) }.getOrNull()
             ?: LocalDate.now().minusDays(1)
@@ -276,7 +313,11 @@ class MainActivity : Activity() {
 
     private fun save() {
         val values = fields.mapValues { (k, e) -> num(e) ?: Store.DEFAULTS.getValue(k) }
+        val old = Store.load(this)
         Store.save(this, values)
+        if (abs(old.lat - values.getValue("lat")) > 0.0005 || abs(old.lon - values.getValue("lon")) > 0.0005) {
+            Store.clearPlace(this)
+        }
         settingsBody.visibility = View.GONE
         chevron.text = "▾"
         fillFields()
