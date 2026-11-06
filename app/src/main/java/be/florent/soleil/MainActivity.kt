@@ -142,11 +142,9 @@ class MainActivity : Activity() {
                     text = shortLabels.getValue(key)
                     setPadding(0, 0, 0, (6 * dp).toInt())
                 }
-                val field = EditText(this, null, 0, R.style.Field).apply {
-                    inputType = InputType.TYPE_CLASS_NUMBER or
-                        InputType.TYPE_NUMBER_FLAG_DECIMAL or InputType.TYPE_NUMBER_FLAG_SIGNED
-                    setSingleLine(true)
-                }
+                // Gonflé depuis XML pour garder le style de saisie Android (focus, clavier, curseur)
+                val field = LayoutInflater.from(this)
+                    .inflate(R.layout.item_field, cell, false) as EditText
                 cell.addView(label)
                 val icon = when (key) { "a1", "a2" -> "🧭"; "tilt" -> "📐"; else -> null }
                 if (icon == null) {

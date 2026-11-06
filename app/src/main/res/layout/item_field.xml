@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EditText xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Field"
+    android:imeOptions="actionNext"
+    android:inputType="numberDecimal|numberSigned"
+    android:selectAllOnFocus="true" />
