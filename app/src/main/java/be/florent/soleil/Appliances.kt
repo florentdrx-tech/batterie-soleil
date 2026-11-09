@@ -16,22 +16,22 @@ data class Reco(val app: Appliance, val advice: Advice, val coverage: Double, va
 
 object Appliances {
 
-    /** Valeurs moyennes indicatives par cycle ou par utilisation. */
+    /**
+     * Valeurs moyennes indicatives par cycle ou par utilisation.
+     * Uniquement des appareils gourmands dont on peut décaler l'usage
+     * (pas de cuisson ni de petits appareils à la conso négligeable).
+     */
     private val CATALOG = listOf(
         Appliance("ll40", "🧺", "Lave-linge 40 °C", 0.8, 2.0, true),
         Appliance("ll60", "🧺", "Lave-linge 60 °C", 1.3, 2.2, false),
         Appliance("lv", "🍽️", "Lave-vaisselle (éco)", 0.9, 2.0, true),
         Appliance("sl_res", "🔥", "Séchoir à condensation", 3.5, 2.5, true),
         Appliance("sl_pac", "🌀", "Séchoir pompe à chaleur", 1.5, 0.8, false),
-        Appliance("four", "🍗", "Four électrique (1 h)", 1.2, 2.5, true),
-        Appliance("induc", "🍳", "Taques à induction (repas)", 1.0, 3.0, false),
         Appliance("boiler", "🚿", "Boiler électrique (chauffe)", 3.5, 2.4, false),
         Appliance("ve", "🚗", "Voiture électrique (+100 km)", 17.0, 3.7, false),
-        Appliance("velo", "🚲", "Vélo électrique (charge)", 0.5, 0.1, false),
         Appliance("clim", "❄️", "Climatisation (3 h)", 3.0, 1.0, false),
         Appliance("piscine", "🏊", "Pompe de piscine (8 h)", 6.0, 0.75, false),
-        Appliance("aspi", "🧹", "Aspirateur (1 h)", 0.7, 0.7, false),
-        Appliance("fer", "👕", "Fer à repasser (1 h)", 1.0, 2.0, false)
+        Appliance("fer", "👕", "Repassage (1 h)", 1.0, 2.0, false)
     )
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("soleil", Context.MODE_PRIVATE)
