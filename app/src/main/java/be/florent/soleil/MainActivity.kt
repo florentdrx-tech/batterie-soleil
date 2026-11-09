@@ -52,6 +52,12 @@ class MainActivity : Activity() {
     private lateinit var batteryLabel: TextView
     private lateinit var calSummary: TextView
     private lateinit var calList: LinearLayout
+    private lateinit var appDays: LinearLayout
+    private lateinit var appSummary: TextView
+    private lateinit var appList: LinearLayout
+    private lateinit var appManage: TextView
+    private var appDay = 0
+    private var manageAll = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +82,11 @@ class MainActivity : Activity() {
         batteryLabel = findViewById(R.id.batteryLabel)
         calSummary = findViewById(R.id.calSummary)
         calList = findViewById(R.id.calList)
+        appDays = findViewById(R.id.appDays)
+        appSummary = findViewById(R.id.appSummary)
+        appList = findViewById(R.id.appList)
+        appManage = findViewById(R.id.appManage)
+        appManage.setOnClickListener { manageAll = !manageAll; renderAppliances() }
         findViewById<View>(R.id.batteryBox).setOnClickListener { editLevel() }
 
         buildSettings()
@@ -203,6 +214,7 @@ class MainActivity : Activity() {
             verdict.setBackgroundResource(R.drawable.pill_low)
             verdict.setTextColor(getColor(R.color.sun))
             status.text = ""
+            renderAppliances()
             return
         }
 
@@ -267,6 +279,7 @@ class MainActivity : Activity() {
         }
 
         status.text = "Mis à jour à ${Store.updatedAt(this)} · correction ×${String.format(fr, "%.2f", c.corr)}"
+        renderAppliances()
     }
 
     // ---------- Actions ----------
@@ -316,6 +329,158 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
+    }
+
+    // ---------- Que lancer ? ----------
+
+    private fun dayLabel(i: Int, date: String): String = when (i) {
+        0 -> "Aujourd'hui"
+        1 -> "Demain"
+        else -> LocalDate.parse(date).format(DateTimeFormatter.ofPattern("EEE d", fr))
+            .replace(".", "").replaceFirstChar { it.uppercase() }
+    }
+
+    private fun renderAppliances() {
+        val c = Store.load(this)
+        val today = LocalDate.now().toString()
+        val fut = Store.days(this).filter { it.date >= today }
+        val dp = resources.displayMetrics.density
+        appDays.removeAllViews()
+        appList.removeAllViews()
+        if (fut.isEmpty()) {
+            appSummary.text = "Les conseils apparaîtront une fois la météo chargée."
+            appManage.visibility = View.GONE
+            return
+        }
+        appManage.visibility = View.VISIBLE
+        if (appDay >= fut.size) appDay = 0
+
+        // Sélecteur de jour
+        fut.forEachIndexed { i, d ->
+            val chip = TextView(this).apply {
+                text = "${sky(d)} ${dayLabel(i, d.date)}"
+                textSize = 13f
+                setPadding((14 * dp).toInt(), (8 * dp).toInt(), (14 * dp).toInt(), (8 * dp).toInt())
+                setBackgroundResource(if (i == appDay) R.drawable.chip_on else R.drawable.chip_off)
+                setTextColor(getColor(if (i == appDay) R.color.ink else R.color.fg))
+                setOnClickListener { appDay = i; renderAppliances() }
+            }
+            appDays.addView(chip, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { if (i > 0) marginStart = (8 * dp).toInt() })
+        }
+
+        val d = fut[appDay]
+        val all = Appliances.all(this)
+        val surplus = Appliances.surplus(c, d)
+        val combo = Appliances.combo(c, d, all)
+        val win = Appliances.bestWindow(c, d)
+        val sb = StringBuilder()
+        sb.append("☀ Surplus solaire prévu : ${f1(surplus)} kWh (après ${f1(c.conso)} kWh de conso habituelle)")
+        if (win != null && surplus > 0.2) {
+            sb.append("\n🕐 Meilleur moment : ${win.first} h – ${win.first + 2} h")
+        }
+        sb.append(
+            if (combo.isEmpty()) "\nPas assez de soleil pour lancer un gros appareil sans tirer sur le réseau ou la batterie."
+            else "\nDe quoi faire tourner : " + combo.joinToString(", ") { it.name }
+        )
+        appSummary.text = sb.toString()
+
+        if (manageAll) {
+            appManage.text = "Terminé ▴"
+            appSummary.text = "Touche un appareil pour l'activer ou modifier sa consommation."
+            all.forEach { addApplianceRow(it, null, fut, dp) }
+        } else {
+            appManage.text = "Gérer mes appareils ▾"
+            val recos = Appliances.advise(c, fut, appDay, all)
+            if (recos.isEmpty()) {
+                appList.addView(TextView(this).apply {
+                    text = "Aucun appareil sélectionné."
+                    setTextColor(getColor(R.color.muted)); textSize = 13f
+                    setPadding(0, (10 * dp).toInt(), 0, 0)
+                })
+            }
+            recos.forEach { addApplianceRow(it.app, it, fut, dp) }
+        }
+    }
+
+    private fun addApplianceRow(app: Appliance, r: Reco?, fut: List<Day>, dp: Float) {
+        appList.addView(View(this).apply { setBackgroundColor(getColor(R.color.line)) },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (1 * dp).toInt().coerceAtLeast(1))
+                .apply { topMargin = (8 * dp).toInt() })
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, (8 * dp).toInt(), 0, 0)
+            background = getDrawable(android.R.drawable.list_selector_background)
+            setOnClickListener { editAppliance(app) }
+            alpha = if (r == null && !app.on) 0.45f else 1f
+        }
+        row.addView(TextView(this).apply {
+            text = app.emoji; textSize = 22f; gravity = android.view.Gravity.CENTER
+        }, LinearLayout.LayoutParams((40 * dp).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT))
+
+        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        texts.addView(TextView(this).apply {
+            text = app.name; setTextColor(getColor(R.color.fg)); textSize = 14f
+        })
+        val detail = StringBuilder("${f1(app.kwh)} kWh · ${f1(app.kw)} kW")
+        if (r != null && r.advice != Advice.YES) {
+            detail.append(" · ≈ ${(r.coverage * 100).roundToInt()} % solaire")
+            r.betterDay?.let { detail.append("\nMieux : ${dayLabel(it, fut[it].date).lowercase()}") }
+        }
+        if (r == null) detail.append(if (app.on) " · activé" else " · désactivé")
+        texts.addView(TextView(this).apply {
+            text = detail; setTextColor(getColor(R.color.muted)); textSize = 12f
+        })
+        row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+
+        if (r != null) {
+            val (label, bg, col) = when (r.advice) {
+                Advice.YES -> Triple("✓ Oui", R.drawable.pill_good, R.color.batt)
+                Advice.PARTIAL -> Triple("En partie", R.drawable.pill_low, R.color.sun)
+                Advice.LATER -> Triple("À reporter", R.drawable.pill_bad, R.color.bad)
+            }
+            row.addView(TextView(this).apply {
+                text = label; textSize = 12f
+                setTextColor(getColor(col)); setBackgroundResource(bg)
+                setPadding((10 * dp).toInt(), (5 * dp).toInt(), (10 * dp).toInt(), (5 * dp).toInt())
+            })
+        } else {
+            row.addView(TextView(this).apply {
+                text = if (app.on) "✓" else "+"; textSize = 18f
+                setTextColor(getColor(if (app.on) R.color.batt else R.color.muted))
+                setPadding((10 * dp).toInt(), 0, (4 * dp).toInt(), 0)
+            })
+        }
+        appList.addView(row)
+    }
+
+    private fun editAppliance(app: Appliance) {
+        val dlg = android.app.Dialog(this)
+        dlg.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        dlg.setContentView(R.layout.dialog_appliance)
+        dlg.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dlg.window?.setLayout((resources.displayMetrics.widthPixels * 0.92).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT)
+        val def = Appliances.default(app.id)
+        dlg.findViewById<TextView>(R.id.aTitle).text = "${app.emoji}  ${app.name}"
+        dlg.findViewById<TextView>(R.id.aInfo).text =
+            "Puissance typique ${f1(app.kw)} kW · valeur moyenne ${f1(def?.kwh ?: app.kwh)} kWh par utilisation"
+        val kwhField = dlg.findViewById<EditText>(R.id.aKwh)
+        kwhField.setText(fmtField(app.kwh))
+        val sw = dlg.findViewById<android.widget.Switch>(R.id.aOn)
+        sw.isChecked = app.on
+        dlg.findViewById<Button>(R.id.aReset).setOnClickListener {
+            kwhField.setText(fmtField(def?.kwh ?: app.kwh))
+        }
+        dlg.findViewById<Button>(R.id.aSave).setOnClickListener {
+            val v = num(kwhField)?.takeIf { it >= 0 } ?: app.kwh
+            Appliances.save(this, app.id, v, sw.isChecked)
+            renderAppliances()
+            dlg.dismiss()
+        }
+        dlg.show()
     }
 
     private fun renderCalibs() {
