@@ -84,7 +84,7 @@ object Reminders {
         if (kind == MORNING) {
             title = "Quel est le niveau de ta batterie ?"
             val k = fut.firstOrNull()?.let { Forecast.est(c, it) }
-            val tip = Appliances.headline(c, fut, Appliances.all(ctx))
+            val tip = Appliances.headline(c, Tariffs.load(ctx), fut, Appliances.all(ctx))
             text = listOfNotNull(
                 k?.let { String.format(java.util.Locale.FRENCH, "☀ %.1f kWh prévus aujourd'hui.", it) },
                 tip?.let { "💡 $it" },

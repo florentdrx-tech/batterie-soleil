@@ -10,9 +10,17 @@ data class Appliance(
     val kwh: Double, val kw: Double, val on: Boolean, val short: String = name
 )
 
-enum class Advice { YES, PARTIAL, LATER }
+enum class Advice { YES, PARTIAL, LATER, OFFPEAK }
 
-data class Reco(val app: Appliance, val advice: Advice, val coverage: Double, val betterDay: Int?)
+/**
+ * Conseil pour un appareil : statut pour le jour affiché, part couverte par le soleil ce jour-là,
+ * meilleur plan trouvé (jour, heure de début, solaire ou heures creuses) et coût estimé.
+ */
+data class Reco(
+    val app: Appliance, val advice: Advice, val coverage: Double, val betterDay: Int?,
+    val planDay: Int, val planTime: java.time.LocalDateTime?, val planOffPeak: Boolean,
+    val cost: Double, val costPeak: Double
+)
 
 object Appliances {
 
@@ -58,26 +66,93 @@ object Appliances {
     private fun coverage(app: Appliance, surplus: Double) =
         if (app.kwh <= 0) 1.0 else min(1.0, surplus / app.kwh)
 
-    /** Conseil pour chaque appareil actif, pour le jour d'index [dayIndex] dans [days]. */
-    fun advise(c: Config, days: List<Day>, dayIndex: Int, list: List<Appliance>): List<Reco> {
-        val s = surplus(c, days[dayIndex])
+    /** Horizon de recherche d'un meilleur moment : le jour affiché et les 3 suivants. */
+    private const val HORIZON = 4
+
+    /** Pénalité par jour d'attente (€), pour préférer le plus tôt à coût presque égal. */
+    private const val WAIT_PENALTY = 0.03
+
+    /**
+     * Conseil pour chaque appareil actif, pour le jour d'index [dayIndex] dans [days].
+     * Compare le meilleur créneau solaire des 4 prochains jours avec les heures creuses.
+     */
+    fun advise(c: Config, t: Tariff, days: List<Day>, dayIndex: Int, list: List<Appliance>): List<Reco> {
+        val now = java.time.LocalDateTime.now()
         return list.filter { it.on }.map { app ->
-            val cov = coverage(app, s)
+            val cov = coverage(app, surplus(c, days[dayIndex]))
+            val peakCost = app.kwh * Tariffs.peak(t)
+
+            var bestScore = Double.MAX_VALUE
+            var bestCost = peakCost
+            var bestDay = dayIndex
+            var bestTime: java.time.LocalDateTime? = null
+            var bestOff = false
+
+            // Options solaires : meilleur créneau de chaque jour
+            for (i in dayIndex until minOf(days.size, dayIndex + HORIZON)) {
+                val d = days[i]
+                val date = java.time.LocalDate.parse(d.date)
+                val h = bestWindow(c, d)?.first ?: 12
+                var at = date.atTime(h, 0)
+                if (at.plusHours(1).isBefore(now)) {
+                    if (date == now.toLocalDate()) continue  // créneau du jour déjà passé
+                }
+                if (at.isBefore(now)) at = now
+                val ci = coverage(app, surplus(c, d))
+                val cost = ci * app.kwh * t.inj + (1 - ci) * app.kwh * Tariffs.price(t, at)
+                val score = cost + (i - dayIndex) * WAIT_PENALTY
+                if (score < bestScore) {
+                    bestScore = score; bestCost = cost; bestDay = i; bestTime = at; bestOff = false
+                }
+            }
+
+            // Option heures creuses, à partir du jour affiché
+            if (t.bi) {
+                val first = java.time.LocalDate.parse(days[dayIndex].date)
+                val from = if (first == now.toLocalDate()) now else first.atTime(7, 0)
+                val slot = Tariffs.nextCheap(t, from)
+                if (slot != null) {
+                    // Si le créneau creux tombe en journée, le soleil en couvre une partie
+                    val idx = days.indexOfFirst { it.date == slot.toLocalDate().toString() }
+                    val ci = if (idx >= 0 && slot.hour in 9..16) coverage(app, surplus(c, days[idx])) else 0.0
+                    val cost = ci * app.kwh * t.inj + (1 - ci) * app.kwh * t.hc
+                    val waitDays = java.time.temporal.ChronoUnit.DAYS.between(first, slot.toLocalDate()).toInt()
+                    val score = cost + waitDays * WAIT_PENALTY
+                    if (score < bestScore - 0.005) {
+                        bestScore = score; bestCost = cost; bestTime = slot; bestOff = ci < 0.5
+                        bestDay = if (idx >= 0) idx else dayIndex
+                    }
+                }
+            }
+
             val advice = when {
                 cov >= 0.9 -> Advice.YES
+                bestOff -> Advice.OFFPEAK
+                bestDay > dayIndex -> Advice.LATER
                 cov >= 0.4 -> Advice.PARTIAL
                 else -> Advice.LATER
             }
-            var better: Int? = null
-            if (advice != Advice.YES) {
-                // Meilleur jour à venir (après le jour affiché) nettement mieux couvert
-                var best = cov
-                for (i in (dayIndex + 1) until days.size) {
-                    val ci = coverage(app, surplus(c, days[i]))
-                    if (ci > best + 0.15) { best = ci; better = i }
-                }
-            }
-            Reco(app, advice, cov, better)
+            Reco(app, advice, cov, if (bestDay > dayIndex && !bestOff) bestDay else null,
+                bestDay, bestTime, bestOff, bestCost, peakCost)
+        }
+    }
+
+    /** Libellé court d'un créneau : « ce soir dès 22 h », « demain dès 11 h », « jeudi vers 12 h ». */
+    fun slotLabel(days: List<Day>, r: Reco): String {
+        val t = r.planTime ?: return dayName(r.planDay, days)
+        val today = java.time.LocalDate.now()
+        val now = java.time.LocalDateTime.now()
+        val h = "${t.hour} h"
+        val day = when (val diff = java.time.temporal.ChronoUnit.DAYS.between(today, t.toLocalDate()).toInt()) {
+            0 -> if (t.hour >= 17) "ce soir" else "aujourd'hui"
+            1 -> if (t.hour < 7) "cette nuit" else "demain"
+            else -> java.time.LocalDate.now().plusDays(diff.toLong())
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE", java.util.Locale.FRENCH))
+        }
+        return when {
+            !t.isAfter(now.plusMinutes(5)) -> "maintenant"
+            r.planOffPeak -> "$day dès $h"
+            else -> "$day vers $h"
         }
     }
 
@@ -121,20 +196,24 @@ object Appliances {
     }
 
     /** Conseil du jour en une phrase, pour l'appli, le widget et la notification du matin. */
-    fun headline(c: Config, days: List<Day>, list: List<Appliance>): String? {
+    fun headline(c: Config, t: Tariff, days: List<Day>, list: List<Appliance>): String? {
         if (days.isEmpty()) return null
-        val recos = advise(c, days, 0, list)
+        val recos = advise(c, t, days, 0, list)
         if (recos.isEmpty()) return null
         val yes = recos.filter { it.advice == Advice.YES }.map { it.app.short }.distinct()
-        val wait = recos.filter { it.advice != Advice.YES && it.betterDay != null }
+        val wait = recos.filter { it.advice != Advice.YES && !it.planOffPeak && it.betterDay != null }
             .groupBy { it.betterDay!! }.minByOrNull { it.key }
         val waitTxt = wait?.let { (d, rs) ->
             "attends ${dayName(d, days)} pour ${joinFr(rs.map { it.app.short }.distinct())}"
         }
+        val off = recos.filter { it.advice == Advice.OFFPEAK }
+        val offTxt = if (off.isEmpty()) null else
+            "${joinFr(off.map { it.app.short }.distinct())} en heures creuses (${slotLabel(days, off.first())})"
         return when {
-            yes.isNotEmpty() && waitTxt != null -> "Lance ${joinFr(yes)} aujourd'hui, $waitTxt"
-            yes.isNotEmpty() -> "Bonne journée pour ${joinFr(yes)} : programme-${if (yes.size > 1) "les" else "le"} aujourd'hui"
-            waitTxt != null -> waitTxt.replaceFirstChar { it.uppercase() }
+            yes.isNotEmpty() -> "Lance ${joinFr(yes)} aujourd'hui" +
+                listOfNotNull(waitTxt, offTxt?.let { "et $it" }).joinToString(", ", prefix = if (waitTxt != null || offTxt != null) ", " else "")
+            waitTxt != null -> waitTxt.replaceFirstChar { it.uppercase() } + (offTxt?.let { ", et $it" } ?: "")
+            offTxt != null -> "Peu de soleil ces prochains jours : lance $offTxt"
             else -> "Peu de soleil cette semaine : pas de jour idéal pour les machines"
         }
     }

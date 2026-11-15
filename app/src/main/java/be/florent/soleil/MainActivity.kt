@@ -109,6 +109,7 @@ class MainActivity : Activity() {
             }.show()
         }
         setupReminders()
+        setupTariff()
         appManage.setOnClickListener { manageAll = !manageAll; renderAppliances() }
         findViewById<View>(R.id.batteryBox).setOnClickListener { editLevel() }
 
@@ -188,6 +189,60 @@ class MainActivity : Activity() {
         }
     }
 
+    // ---------- Tarif ----------
+
+    private fun setupTariff() {
+        val bi = findViewById<android.widget.RadioButton>(R.id.tarBi)
+        val mono = findViewById<android.widget.RadioButton>(R.id.tarMono)
+        val biBox = findViewById<View>(R.id.tarBiBox)
+        val monoBox = findViewById<View>(R.id.tarMonoBox)
+        val r1s = findViewById<EditText>(R.id.tarR1s); val r1e = findViewById<EditText>(R.id.tarR1e)
+        val r2s = findViewById<EditText>(R.id.tarR2s); val r2e = findViewById<EditText>(R.id.tarR2e)
+        val we = findViewById<android.widget.CheckBox>(R.id.tarWeekend)
+        val hp = findViewById<EditText>(R.id.tarHp); val hc = findViewById<EditText>(R.id.tarHc)
+        val mp = findViewById<EditText>(R.id.tarMonoPrice); val inj = findViewById<EditText>(R.id.tarInj)
+        val out = findViewById<TextView>(R.id.tarOut)
+
+        fun hr(v: Int) = if (v < 0) "" else v.toString()
+        fun price(v: Double) = String.format(fr, "%.2f", v)
+        fun fill(t: Tariff) {
+            bi.isChecked = t.bi; mono.isChecked = !t.bi
+            biBox.visibility = if (t.bi) View.VISIBLE else View.GONE
+            monoBox.visibility = if (t.bi) View.GONE else View.VISIBLE
+            r1s.setText(hr(t.r1s)); r1e.setText(hr(t.r1e)); r2s.setText(hr(t.r2s)); r2e.setText(hr(t.r2e))
+            we.isChecked = t.weekend
+            hp.setText(price(t.hp)); hc.setText(price(t.hc)); mp.setText(price(t.mono)); inj.setText(price(t.inj))
+        }
+        fill(Tariffs.load(this))
+
+        findViewById<android.widget.RadioGroup>(R.id.tarType).setOnCheckedChangeListener { _, id ->
+            val isBi = id == R.id.tarBi
+            biBox.visibility = if (isBi) View.VISIBLE else View.GONE
+            monoBox.visibility = if (isBi) View.GONE else View.VISIBLE
+        }
+        fun preset(p: Tariff) {
+            r1s.setText(hr(p.r1s)); r1e.setText(hr(p.r1e)); r2s.setText(hr(p.r2s)); r2e.setText(hr(p.r2e))
+            we.isChecked = p.weekend
+        }
+        findViewById<View>(R.id.tarPresetWal).setOnClickListener { preset(Tariffs.WALLONIE) }
+        findViewById<View>(R.id.tarPresetClassic).setOnClickListener { preset(Tariffs.CLASSIQUE) }
+
+        findViewById<Button>(R.id.tarSave).setOnClickListener {
+            fun h(e: EditText): Int = e.text.toString().trim().toIntOrNull()?.takeIf { it in 0..24 }?.let { it % 24 } ?: -1
+            val d = Tariffs.load(this)
+            val t = Tariff(
+                bi.isChecked, h(r1s), h(r1e), h(r2s), h(r2e), we.isChecked,
+                num(hp) ?: d.hp, num(hc) ?: d.hc, num(mp) ?: d.mono, num(inj) ?: d.inj
+            )
+            Tariffs.save(this, t)
+            fill(t)
+            out.visibility = View.VISIBLE
+            out.text = "✓ Tarif enregistré : les coûts et les conseils sont recalculés."
+            show()
+            SolarWidget.refreshAll(this)
+        }
+    }
+
     // ---------- Rappels ----------
 
     private fun setupReminders() {
@@ -232,6 +287,8 @@ class MainActivity : Activity() {
     // ---------- Mise en forme ----------
 
     private fun f1(v: Double) = String.format(fr, "%.1f", v)
+
+    private fun eur(v: Double) = String.format(fr, "%.2f €", v)
 
     private fun fmtField(v: Double): String =
         if (v == Math.floor(v)) v.toLong().toString() else v.toString().replace('.', ',')
@@ -398,7 +455,7 @@ class MainActivity : Activity() {
         }
 
         status.text = "Mis à jour à ${Store.updatedAt(this)} · correction ×${String.format(fr, "%.2f", Forecast.factorFor(c, today))}"
-        val h = Appliances.headline(c, fut, Appliances.all(this))
+        val h = Appliances.headline(c, Tariffs.load(this), fut, Appliances.all(this))
         tip.visibility = if (h == null) View.GONE else View.VISIBLE
         tip.text = "💡 ${h ?: ""}"
         renderAppliances()
@@ -514,7 +571,7 @@ class MainActivity : Activity() {
             all.forEach { addApplianceRow(it, null, fut, dp) }
         } else {
             appManage.text = "Gérer mes appareils ▾"
-            val recos = Appliances.advise(c, fut, appDay, all)
+            val recos = Appliances.advise(c, Tariffs.load(this), fut, appDay, all)
             if (recos.isEmpty()) {
                 appList.addView(TextView(this).apply {
                     text = "Aucun appareil sélectionné."
@@ -547,9 +604,17 @@ class MainActivity : Activity() {
             text = app.name; setTextColor(getColor(R.color.fg)); textSize = 14f
         })
         val detail = StringBuilder("${f1(app.kwh)} kWh · ${f1(app.kw)} kW")
-        if (r != null && r.advice != Advice.YES) {
-            detail.append(" · ≈ ${(r.coverage * 100).roundToInt()} % solaire")
-            r.betterDay?.let { detail.append("\nMieux : ${dayLabel(it, fut[it].date).lowercase()}") }
+        if (r != null) {
+            val slot = Appliances.slotLabel(fut, r)
+            detail.append("\n")
+            when {
+                r.advice == Advice.YES -> detail.append("☀ $slot")
+                r.planOffPeak -> detail.append("🌙 Heures creuses $slot")
+                r.betterDay != null -> detail.append("☀ Mieux $slot")
+                else -> detail.append("≈ ${(r.coverage * 100).roundToInt()} % solaire, $slot")
+            }
+            detail.append(" · ≈ ${eur(r.cost)}")
+            if (r.costPeak - r.cost > 0.05) detail.append(" au lieu de ${eur(r.costPeak)}")
         }
         if (r == null) detail.append(if (app.on) " · activé" else " · désactivé")
         texts.addView(TextView(this).apply {
@@ -562,6 +627,7 @@ class MainActivity : Activity() {
                 Advice.YES -> Triple("✓ Oui", R.drawable.pill_good, R.color.batt)
                 Advice.PARTIAL -> Triple("En partie", R.drawable.pill_low, R.color.sun)
                 Advice.LATER -> Triple("À reporter", R.drawable.pill_bad, R.color.bad)
+                Advice.OFFPEAK -> Triple("Heures creuses", R.drawable.pill_night, R.color.night)
             }
             row.addView(TextView(this).apply {
                 text = label; textSize = 12f

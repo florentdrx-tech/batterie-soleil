@@ -56,7 +56,7 @@ class SolarWidget : AppWidgetProvider() {
                     v.setTextViewText(R.id.verdict, Forecast.verdict(c, k))
                 }
                 val n = fut.getOrNull(1)
-                val h = Appliances.headline(c, fut, Appliances.all(ctx))
+                val h = Appliances.headline(c, Tariffs.load(ctx), fut, Appliances.all(ctx))
                 if (h != null) {
                     v.setTextViewText(R.id.next, "💡 $h")
                 } else if (n != null) {

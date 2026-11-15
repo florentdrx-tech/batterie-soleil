@@ -12,5 +12,6 @@
     <color name="batt">#4CC283</color>
     <color name="batt_dim">#173527</color>
     <color name="bad">#F07A7A</color>
+    <color name="night">#8FB4F0</color>
     <color name="ink">#0F1720</color>
 </resources>

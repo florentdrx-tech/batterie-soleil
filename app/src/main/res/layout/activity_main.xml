@@ -647,6 +647,337 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Tarif -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:text="Mon tarif d'électricité" />
+
+                <TextView
+                    style="@style/Body"
+                    android:layout_marginTop="4dp"
+                    android:text="Sert à estimer le coût de chaque appareil et à conseiller les heures creuses quand le soleil manque." />
+
+                <RadioGroup
+                    android:id="@+id/tarType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/tarBi"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:buttonTint="@color/sun"
+                        android:text="Bi-horaire"
+                        android:textColor="@color/fg" />
+
+                    <RadioButton
+                        android:id="@+id/tarMono"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:buttonTint="@color/sun"
+                        android:text="Mono-horaire"
+                        android:textColor="@color/fg" />
+                </RadioGroup>
+
+                <LinearLayout
+                    android:id="@+id/tarBiBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Label"
+                        android:layout_marginTop="14dp"
+                        android:text="Heures creuses" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tarPresetWal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/chip_off"
+                            android:paddingStart="14dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="8dp"
+                            android:text="Wallonie 2026"
+                            android:textColor="@color/fg"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tarPresetClassic"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/chip_off"
+                            android:paddingStart="14dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="8dp"
+                            android:text="22 h–7 h + week-end"
+                            android:textColor="@color/fg"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="De"
+                        android:textColor="@color/fg"
+                        android:textSize="14sp" />
+
+                    <EditText
+                        android:id="@+id/tarR1s"
+                        style="@style/Field"
+                        android:layout_width="64dp"
+                        android:gravity="center"
+                        android:hint="–"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:selectAllOnFocus="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="h à"
+                        android:textColor="@color/fg"
+                        android:textSize="14sp" />
+
+                    <EditText
+                        android:id="@+id/tarR1e"
+                        style="@style/Field"
+                        android:layout_width="64dp"
+                        android:gravity="center"
+                        android:hint="–"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:selectAllOnFocus="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="h"
+                        android:textColor="@color/fg"
+                        android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="et de"
+                        android:textColor="@color/fg"
+                        android:textSize="14sp" />
+
+                    <EditText
+                        android:id="@+id/tarR2s"
+                        style="@style/Field"
+                        android:layout_width="64dp"
+                        android:gravity="center"
+                        android:hint="–"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:selectAllOnFocus="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="h à"
+                        android:textColor="@color/fg"
+                        android:textSize="14sp" />
+
+                    <EditText
+                        android:id="@+id/tarR2e"
+                        style="@style/Field"
+                        android:layout_width="64dp"
+                        android:gravity="center"
+                        android:hint="–"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:selectAllOnFocus="true" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="h"
+                        android:textColor="@color/fg"
+                        android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <CheckBox
+                        android:id="@+id/tarWeekend"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:buttonTint="@color/sun"
+                        android:text="Tout le week-end en heures creuses"
+                        android:textColor="@color/fg" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Label"
+                                android:layout_marginBottom="6dp"
+                                android:text="Heures pleines (€/kWh)" />
+
+                            <EditText
+                                android:id="@+id/tarHp"
+                                style="@style/Field"
+                                android:hint=""
+                                android:inputType="numberDecimal"
+                                android:selectAllOnFocus="true" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="12dp"
+                            android:layout_height="1dp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Label"
+                                android:layout_marginBottom="6dp"
+                                android:text="Heures creuses (€/kWh)" />
+
+                            <EditText
+                                android:id="@+id/tarHc"
+                                style="@style/Field"
+                                android:hint=""
+                                android:inputType="numberDecimal"
+                                android:selectAllOnFocus="true" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/tarMonoBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Label"
+                            android:layout_marginBottom="6dp"
+                            android:text="Prix du kWh (€/kWh)" />
+
+                        <EditText
+                            android:id="@+id/tarMonoPrice"
+                            style="@style/Field"
+                            android:hint=""
+                            android:inputType="numberDecimal"
+                            android:selectAllOnFocus="true" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Label"
+                            android:layout_marginBottom="6dp"
+                            android:text="Revente du surplus injecté (€/kWh)" />
+
+                        <EditText
+                            android:id="@+id/tarInj"
+                            style="@style/Field"
+                            android:hint=""
+                            android:inputType="numberDecimal"
+                            android:selectAllOnFocus="true" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    style="@style/Body"
+                    android:layout_marginTop="8dp"
+                    android:text="Mets les prix tout compris (énergie, réseau et taxes) de ta fiche tarifaire. Les valeurs proposées sont des exemples." />
+
+                <TextView
+                    android:id="@+id/tarOut"
+                    style="@style/Body"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/batt"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/tarSave"
+                    style="@style/PrimaryButton"
+                    android:layout_marginTop="12dp"
+                    android:text="Enregistrer le tarif" />
+            </LinearLayout>
+
+
             <!-- Ombres -->
             <LinearLayout
                 android:layout_width="match_parent"
