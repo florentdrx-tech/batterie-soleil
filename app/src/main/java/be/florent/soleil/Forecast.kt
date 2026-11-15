@@ -11,12 +11,13 @@ object Forecast {
     /** Pertes onduleur, câbles, température. */
     const val PR = 0.82
 
-    private fun fetchArray(c: Config, compassAzimuth: Double): JSONObject {
+    private fun fetchArray(c: Config, compassAzimuth: Double, withDni: Boolean): JSONObject {
         // Open-Meteo : 0 = sud, -90 = est, 90 = ouest
         val omAz = compassAzimuth - 180.0
         val url = URL(
             "https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}" +
-                "&hourly=global_tilted_irradiance&tilt=${c.tilt}&azimuth=$omAz" +
+                "&hourly=global_tilted_irradiance${if (withDni) ",direct_normal_irradiance" else ""}" +
+                "&tilt=${c.tilt}&azimuth=$omAz" +
                 "&daily=sunshine_duration,cloud_cover_mean&timezone=auto&past_days=7&forecast_days=7"
         )
         val conn = url.openConnection() as HttpURLConnection
@@ -31,10 +32,10 @@ object Forecast {
     }
 
     /** Irradiance horaire par jour (24 valeurs, Wh/m²). */
-    private fun hourly(j: JSONObject): Map<String, DoubleArray> {
+    private fun hourly(j: JSONObject, key: String = "global_tilted_irradiance"): Map<String, DoubleArray> {
         val h = j.getJSONObject("hourly")
         val t = h.getJSONArray("time")
-        val g = h.getJSONArray("global_tilted_irradiance")
+        val g = h.optJSONArray(key) ?: return emptyMap()
         val m = LinkedHashMap<String, DoubleArray>()
         for (i in 0 until t.length()) {
             val ts = t.getString(i)
@@ -47,10 +48,12 @@ object Forecast {
     }
 
     fun fetch(c: Config): List<Day> {
-        val j1 = fetchArray(c, c.a1)
-        val j2 = fetchArray(c, c.a2)
+        val j1 = fetchArray(c, c.a1, true)
+        val j2 = fetchArray(c, c.a2, false)
         val g1 = hourly(j1)
         val g2 = hourly(j2)
+        val dni = hourly(j1, "direct_normal_irradiance")
+        val off = j1.optInt("utc_offset_seconds", 3600)
         val daily = j1.getJSONObject("daily")
         val time = daily.getJSONArray("time")
         val sun = daily.getJSONArray("sunshine_duration")
@@ -64,14 +67,28 @@ object Forecast {
                 sun = if (sun.isNull(i)) 0.0 else sun.getDouble(i) / 3600.0,
                 cloud = if (cloud.isNull(i)) 0.0 else cloud.getDouble(i),
                 h1 = g1[d]?.toList() ?: emptyList(),
-                h2 = g2[d]?.toList() ?: emptyList()
+                h2 = g2[d]?.toList() ?: emptyList(),
+                dni = dni[d]?.toList() ?: emptyList(),
+                off = off
             )
         }
     }
 
     fun base(c: Config, d: Day): Double = ((d.g1 / 1000.0) * c.p1 + (d.g2 / 1000.0) * c.p2) * PR
 
-    fun est(c: Config, d: Day): Double = base(c, d) * c.corr
+    fun est(c: Config, d: Day): Double = base(c, d) * factorFor(c, d.date)
+
+    /**
+     * Correction à appliquer un jour donné : celle de la même saison si au moins 3 saisies
+     * à ±45 jours, sinon la moyenne générale. Renvoie (facteur, nombre de jours de saison utilisés).
+     */
+    fun seasonInfo(c: Config, date: String): Pair<Double, Int> {
+        val near = Store.seasonal(c.calibs, date).take(Store.CALIB_WINDOW)
+        val f = if (near.size >= Store.SEASON_MIN) Store.factor(near) else null
+        return if (f != null) Pair(f, near.size) else Pair(c.corr, 0)
+    }
+
+    fun factorFor(c: Config, date: String): Double = seasonInfo(c, date).first
 
     fun battPct(c: Config, kwh: Double): Double {
         if (c.bat <= 0.0) return 0.0
@@ -93,7 +110,7 @@ object Forecast {
             total += e
             rem += e * (i - startH).coerceIn(0.0, 1.0)
         }
-        val prodRem = rem * PR * c.corr
+        val prodRem = rem * PR * factorFor(c, d.date)
         val consoRem = if (total > 0) c.conso * (rem / total) else 0.0
         return (startPct + (prodRem - consoRem) / c.bat).coerceIn(0.0, 1.0)
     }

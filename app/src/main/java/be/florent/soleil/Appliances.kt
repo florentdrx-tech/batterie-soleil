@@ -95,7 +95,7 @@ object Appliances {
     fun bestWindow(c: Config, d: Day): Pair<Int, Double>? {
         if (d.h1.size < 24 || d.h2.size < 24) return null
         val e = DoubleArray(24) { i ->
-            ((d.h1[i] / 1000.0) * c.p1 + (d.h2[i] / 1000.0) * c.p2) * Forecast.PR * c.corr
+            ((d.h1[i] / 1000.0) * c.p1 + (d.h2[i] / 1000.0) * c.p2) * Forecast.PR * Forecast.factorFor(c, d.date)
         }
         // La valeur de HH:00 couvre HH-1 → HH : un créneau [h, h+2] = valeurs h+1 et h+2
         var bestStart = -1

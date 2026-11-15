@@ -7,7 +7,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
-class Config(val m: Map<String, Double>) {
+class Config(val m: Map<String, Double>, val calibs: List<Calib> = emptyList()) {
     val lat: Double get() = m.getValue("lat")
     val lon: Double get() = m.getValue("lon")
     val p1: Double get() = m.getValue("p1")
@@ -26,7 +26,9 @@ data class Calib(val date: String, val real: Double, val base: Double)
 data class Day(
     val date: String, val g1: Double, val g2: Double, val sun: Double, val cloud: Double,
     /** Irradiance horaire (Wh/m²), index = heure de fin de l'intervalle (valeur de HH:00 = HH-1 → HH). */
-    val h1: List<Double> = emptyList(), val h2: List<Double> = emptyList()
+    val h1: List<Double> = emptyList(), val h2: List<Double> = emptyList(),
+    /** Rayonnement direct normal horaire (W/m²) et décalage UTC du fuseau des heures. */
+    val dni: List<Double> = emptyList(), val off: Int = 3600
 )
 
 object Store {
@@ -52,7 +54,7 @@ object Store {
 
     fun load(ctx: Context): Config {
         val p = prefs(ctx)
-        return Config(DEFAULTS.mapValues { (k, d) -> p.getString(k, null)?.toDoubleOrNull() ?: d })
+        return Config(DEFAULTS.mapValues { (k, d) -> p.getString(k, null)?.toDoubleOrNull() ?: d }, calibs(ctx))
     }
 
     fun save(ctx: Context, values: Map<String, Double>) {
@@ -68,7 +70,8 @@ object Store {
         days.forEach {
             arr.put(JSONObject().put("date", it.date).put("g1", it.g1).put("g2", it.g2)
                 .put("sun", it.sun).put("cloud", it.cloud)
-                .put("h1", JSONArray(it.h1)).put("h2", JSONArray(it.h2)))
+                .put("h1", JSONArray(it.h1)).put("h2", JSONArray(it.h2))
+                .put("dni", JSONArray(it.dni)).put("off", it.off))
         }
         prefs(ctx).edit()
             .putString("days", arr.toString())
@@ -76,7 +79,17 @@ object Store {
             .apply()
     }
 
-    fun days(ctx: Context): List<Day> {
+    /** Jours de prévision, avec les ombres des obstacles appliquées (sauf si shaded = false). */
+    fun days(ctx: Context, shaded: Boolean = true): List<Day> {
+        val raw = rawDays(ctx)
+        if (!shaded) return raw
+        val obs = obstacles(ctx)
+        if (obs.isEmpty()) return raw
+        val c = load(ctx)
+        return raw.map { Shading.apply(c, obs, it) }
+    }
+
+    private fun rawDays(ctx: Context): List<Day> {
         val s = prefs(ctx).getString("days", null) ?: return emptyList()
         return try {
             val arr = JSONArray(s)
@@ -84,7 +97,8 @@ object Store {
                 val o = arr.getJSONObject(it)
                 Day(o.getString("date"), o.getDouble("g1"), o.getDouble("g2"),
                     o.getDouble("sun"), o.getDouble("cloud"),
-                    list(o.optJSONArray("h1")), list(o.optJSONArray("h2")))
+                    list(o.optJSONArray("h1")), list(o.optJSONArray("h2")),
+                    list(o.optJSONArray("dni")), o.optInt("off", 3600))
             }
         } catch (e: Exception) { emptyList() }
     }
@@ -173,5 +187,53 @@ object Store {
 
     private fun recompute(ctx: Context, list: List<Calib>) {
         set(ctx, "corr", factor(list) ?: 1.0)
+    }
+
+    // ---------- Saisons ----------
+
+    const val SEASON_DAYS = 45
+    const val SEASON_MIN = 3
+
+    /** Saisies faites à la même période de l'année (±45 jours, toutes années confondues). */
+    fun seasonal(list: List<Calib>, date: String): List<Calib> {
+        val doy = java.time.LocalDate.parse(date).dayOfYear
+        return list.filter {
+            val d = kotlin.math.abs(java.time.LocalDate.parse(it.date).dayOfYear - doy)
+            minOf(d, 365 - d) <= SEASON_DAYS
+        }
+    }
+
+    // ---------- Obstacles (ombres) ----------
+
+    fun obstacles(ctx: Context): List<Obstacle> {
+        val s = prefs(ctx).getString("obstacles", null) ?: return emptyList()
+        return try {
+            val a = JSONArray(s)
+            (0 until a.length()).map {
+                val o = a.getJSONObject(it)
+                Obstacle(o.getDouble("az1"), o.getDouble("az2"), o.getDouble("el"), o.optBoolean("leafy", false))
+            }
+        } catch (e: Exception) { emptyList() }
+    }
+
+    fun saveObstacles(ctx: Context, list: List<Obstacle>) {
+        val a = JSONArray()
+        list.forEach {
+            a.put(JSONObject().put("az1", it.az1).put("az2", it.az2).put("el", it.el).put("leafy", it.leafy))
+        }
+        prefs(ctx).edit().putString("obstacles", a.toString()).apply()
+        rebaseCalibs(ctx)
+    }
+
+    /** Recalcule la prévision brute des saisies encore en mémoire, pour ne pas compter les ombres deux fois. */
+    private fun rebaseCalibs(ctx: Context) {
+        val c = load(ctx)
+        val ds = days(ctx)
+        val list = calibs(ctx).map { cal ->
+            val d = ds.find { it.date == cal.date } ?: return@map cal
+            val b = Forecast.base(c, d)
+            if (b > 0.0) cal.copy(base = b) else cal
+        }
+        if (list.isNotEmpty()) saveCalibs(ctx, list)
     }
 }

@@ -58,6 +58,13 @@ class MainActivity : Activity() {
     private lateinit var appManage: TextView
     private var appDay = 0
     private lateinit var tip: TextView
+    private lateinit var horizon: HorizonView
+    private lateinit var shadeImpact: TextView
+    private lateinit var obsList: LinearLayout
+    private lateinit var diagStatus: TextView
+    private lateinit var diagText: TextView
+    private lateinit var diagSeason: TextView
+    private lateinit var diagCauses: LinearLayout
     private var manageAll = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +95,19 @@ class MainActivity : Activity() {
         appList = findViewById(R.id.appList)
         appManage = findViewById(R.id.appManage)
         tip = findViewById(R.id.tip)
+        horizon = findViewById(R.id.horizon)
+        shadeImpact = findViewById(R.id.shadeImpact)
+        obsList = findViewById(R.id.obsList)
+        diagStatus = findViewById(R.id.diagStatus)
+        diagText = findViewById(R.id.diagText)
+        diagSeason = findViewById(R.id.diagSeason)
+        diagCauses = findViewById(R.id.diagCauses)
+        findViewById<Button>(R.id.obsAdd).setOnClickListener {
+            ObstacleDialog(this) { o ->
+                Store.saveObstacles(this, Store.obstacles(this) + o)
+                afterShadeChange()
+            }.show()
+        }
         setupReminders()
         appManage.setOnClickListener { manageAll = !manageAll; renderAppliances() }
         findViewById<View>(R.id.batteryBox).setOnClickListener { editLevel() }
@@ -291,6 +311,8 @@ class MainActivity : Activity() {
         subtitle.text = "${place(c)} · ${f1(c.p1 + c.p2)} kWc · batterie ${f1(c.bat)} kWh"
         placeOut.text = "📍 ${place(c)} (${String.format(fr, "%.4f, %.4f", c.lat, c.lon)})"
         renderCalibs()
+        renderShade()
+        renderDiag()
         settingsSummary.text = "${f1(c.p1)} kWc à ${c.a1.roundToInt()}° + ${f1(c.p2)} kWc à ${c.a2.roundToInt()}°"
     }
 
@@ -375,7 +397,7 @@ class MainActivity : Activity() {
             days.addView(row)
         }
 
-        status.text = "Mis à jour à ${Store.updatedAt(this)} · correction ×${String.format(fr, "%.2f", c.corr)}"
+        status.text = "Mis à jour à ${Store.updatedAt(this)} · correction ×${String.format(fr, "%.2f", Forecast.factorFor(c, today))}"
         val h = Appliances.headline(c, fut, Appliances.all(this))
         tip.visibility = if (h == null) View.GONE else View.VISIBLE
         tip.text = "💡 ${h ?: ""}"
@@ -582,6 +604,168 @@ class MainActivity : Activity() {
             dlg.dismiss()
         }
         dlg.show()
+    }
+
+    // ---------- Ombres ----------
+
+    private fun afterShadeChange() {
+        fillFields()
+        show()
+        SolarWidget.refreshAll(this)
+    }
+
+    private fun renderShade() {
+        val c = Store.load(this)
+        val obs = Store.obstacles(this)
+        horizon.set(c.lat, c.lon, obs)
+        obsList.removeAllViews()
+        if (obs.isEmpty()) {
+            shadeImpact.text = "Aucun obstacle encodé : l'appli considère que rien ne fait d'ombre à tes panneaux."
+            return
+        }
+        val y = LocalDate.now().year
+        fun pct(m: Int, d: Int) = (Shading.directLoss(c, obs, LocalDate.of(y, m, d)) * 100).roundToInt()
+        val today = LocalDate.now().toString()
+        val raw = Store.days(this, false).find { it.date == today }
+        val sh = Store.days(this).find { it.date == today }
+        val sb = StringBuilder("Soleil direct perdu par ciel clair :\n21 déc. −${pct(12, 21)} %  ·  21 mars −${pct(3, 20)} %  ·  21 juin −${pct(6, 21)} %")
+        if (raw != null && sh != null) {
+            val lost = Forecast.est(c, raw) - Forecast.est(c, sh)
+            if (lost > 0.05) sb.append("\nAujourd'hui : −${f1(lost)} kWh sur la prévision.")
+        }
+        shadeImpact.text = sb.toString()
+
+        val dp = resources.displayMetrics.density
+        obs.forEachIndexed { i, o ->
+            obsList.addView(View(this).apply { setBackgroundColor(getColor(R.color.line)) },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (1 * dp).toInt().coerceAtLeast(1))
+                    .apply { topMargin = (8 * dp).toInt() })
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(0, (8 * dp).toInt(), 0, 0)
+            }
+            row.addView(TextView(this).apply {
+                text = if (o.leafy) "🌳" else "🏠"; textSize = 20f; gravity = android.view.Gravity.CENTER
+            }, LinearLayout.LayoutParams((36 * dp).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT))
+            val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            val mid = ((o.az1 + Shading.span(o) / 2) % 360).roundToInt()
+            texts.addView(TextView(this).apply {
+                text = (if (o.leafy) "Arbre (feuilles caduques)" else "Bâtiment ou arbre persistant") +
+                    " · ${MeasureDialog.cardinal(mid)}"
+                setTextColor(getColor(R.color.fg)); textSize = 14f
+            })
+            texts.addView(TextView(this).apply {
+                text = "De ${o.az1.roundToInt()}° à ${o.az2.roundToInt()}° · hauteur ${o.el.roundToInt()}°"
+                setTextColor(getColor(R.color.muted)); textSize = 12f
+            })
+            row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(TextView(this).apply {
+                text = "✕"; textSize = 16f; gravity = android.view.Gravity.CENTER
+                setTextColor(getColor(R.color.muted))
+                setBackgroundResource(R.drawable.round_btn)
+                contentDescription = "Supprimer cet obstacle"
+                setOnClickListener {
+                    Store.saveObstacles(this@MainActivity, Store.obstacles(this@MainActivity).filterIndexed { k, _ -> k != i })
+                    afterShadeChange()
+                }
+            }, LinearLayout.LayoutParams((36 * dp).toInt(), (36 * dp).toInt()))
+            obsList.addView(row)
+        }
+    }
+
+    // ---------- Diagnostic ----------
+
+    private fun ratio(l: List<Calib>): Double {
+        val b = l.sumOf { it.base }
+        return if (b > 0) l.sumOf { it.real } / b else 0.0
+    }
+
+    private fun renderDiag() {
+        val c = Store.load(this)
+        val list = c.calibs.take(Store.CALIB_WINDOW)
+        val kwc = c.p1 + c.p2
+        val today = LocalDate.now().toString()
+        diagCauses.removeAllViews()
+
+        val (fNow, nSeason) = Forecast.seasonInfo(c, today)
+        diagSeason.text = when {
+            nSeason > 0 -> "Correction appliquée en ce moment : ×${String.format(fr, "%.2f", fNow)}, calculée sur $nSeason jour${if (nSeason > 1) "s" else ""} de la même saison (±45 jours)."
+            c.calibs.isNotEmpty() -> "Correction appliquée : ×${String.format(fr, "%.2f", fNow)}, moyenne de tous tes jours. Encode au moins ${Store.SEASON_MIN} jours dans la saison en cours pour une correction propre à la saison."
+            else -> ""
+        }
+
+        if (list.isEmpty() || kwc <= 0) {
+            diagStatus.setBackgroundResource(R.drawable.pill_low)
+            diagStatus.setTextColor(getColor(R.color.sun))
+            diagStatus.text = "Pas encore de diagnostic"
+            diagText.text = "Encode ta production réelle pendant quelques jours : l'appli comparera avec ce qu'elle attendait et cherchera les causes d'un écart."
+            return
+        }
+
+        val r = ratio(list)
+        val n = list.size
+        val realKwc = list.sumOf { it.real } / n / kwc
+        val expKwc = list.sumOf { it.base } / n / kwc
+        diagText.text = "Sur tes $n dernier${if (n > 1) "s" else ""} jour${if (n > 1) "s" else ""} encodé${if (n > 1) "s" else ""} : " +
+            "${String.format(fr, "%.2f", realKwc)} kWh par kWc installé en moyenne, pour ${String.format(fr, "%.2f", expKwc)} attendus, " +
+            "soit ${(r * 100).roundToInt()} % de la prévision."
+        when {
+            r >= 0.9 -> {
+                diagStatus.setBackgroundResource(R.drawable.pill_good); diagStatus.setTextColor(getColor(R.color.batt))
+                diagStatus.text = "✓ Production conforme aux prévisions"
+            }
+            r >= 0.7 -> {
+                diagStatus.setBackgroundResource(R.drawable.pill_low); diagStatus.setTextColor(getColor(R.color.sun))
+                diagStatus.text = "Un peu en dessous des prévisions"
+            }
+            else -> {
+                diagStatus.setBackgroundResource(R.drawable.pill_bad); diagStatus.setTextColor(getColor(R.color.bad))
+                diagStatus.text = "Nettement en dessous des prévisions"
+            }
+        }
+
+        val causes = ArrayList<Pair<String, String>>()
+        if (n >= 6) {
+            val rr = ratio(list.take(3)); val ro = ratio(list.drop(3))
+            if (ro > 0 && rr < ro * 0.75) {
+                causes.add("📉" to "Baisse récente : tes 3 derniers jours sont ${((1 - rr / ro) * 100).roundToInt()} % sous les précédents. Regarde l'appli de l'onduleur : message d'erreur, panneau ou micro-onduleur en défaut.")
+            }
+        }
+        if (r > 1.2) {
+            causes.add("🔎" to "Tu produis plus que prévu : vérifie la puissance (kWc), l'orientation et l'inclinaison encodées dans Paramètres.")
+        }
+        if (r < 0.9) {
+            val obs = Store.obstacles(this)
+            causes.add("🌳" to if (obs.isEmpty())
+                "Ombres : aucun obstacle encodé. Un arbre ou une maison voisine peut couper une grande partie de la production en hiver, quand le soleil est bas. Relève-les dans Paramètres › Ombres."
+            else "Ombres : ${obs.size} obstacle${if (obs.size > 1) "s" else ""} pris en compte. S'il en manque (cheminée, antenne, haie, maison voisine), ajoute-les.")
+            causes.add("🧽" to if (c.tilt < 15)
+                "Saleté : avec une inclinaison faible (${c.tilt.roundToInt()}°), la pluie nettoie mal. Nettoie les panneaux, puis compare quelques jours avant et après."
+            else "Saleté : pollen, fientes, mousse, poussière d'un champ ou d'une route. Nettoie les panneaux, puis compare quelques jours avant et après.")
+            causes.add("🧭" to "Orientation et inclinaison : vérifie-les avec la boussole 🧭 et l'inclinomètre 📐 dans Paramètres. Une erreur de 90° fausse fortement la prévision.")
+            causes.add("🔋" to "Batterie pleine et injection bridée : si ton onduleur limite l'injection sur le réseau, il réduit la production dès que la batterie est pleine. Encode plutôt des jours où elle n'était pas pleine.")
+            causes.add("⚡" to "Panne partielle : si une chaîne de panneaux ne produit plus, la production plafonne même par grand soleil. Compare la production par chaîne ou par panneau dans l'appli de l'onduleur.")
+            if (LocalDate.now().monthValue in listOf(11, 12, 1, 2)) {
+                causes.add("❄️" to "Givre ou neige : en hiver, les panneaux peuvent rester couverts une partie de la matinée.")
+            }
+        } else if (causes.isEmpty()) {
+            causes.add("👍" to "Continue d'encoder ta production de temps en temps, surtout aux changements de saison, pour garder des prévisions justes.")
+        }
+
+        val dp = resources.displayMetrics.density
+        causes.forEach { (icon, txt) ->
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(0, (10 * dp).toInt(), 0, 0)
+            }
+            row.addView(TextView(this).apply { text = icon; textSize = 18f },
+                LinearLayout.LayoutParams((34 * dp).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT))
+            row.addView(TextView(this).apply {
+                text = txt; textSize = 13f; setTextColor(getColor(R.color.fg)); setLineSpacing(0f, 1.15f)
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            diagCauses.addView(row)
+        }
     }
 
     private fun renderCalibs() {

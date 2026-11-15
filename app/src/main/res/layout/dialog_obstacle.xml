@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/card_bg"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        style="@style/CardTitle"
+        android:text="Relever un obstacle" />
+
+    <TextView
+        style="@style/Body"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="Place-toi au plus près des panneaux (fenêtre de l'étage, pied du toit). Tiens le téléphone debout, écran vers toi, et pointe son dos vers l'obstacle." />
+
+    <TextView
+        android:id="@+id/oValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:fontFamily="sans-serif-condensed"
+        android:text="…"
+        android:textColor="@color/sun"
+        android:textSize="40sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/oSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/fg"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/oStep"
+        style="@style/Body"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/pill_low"
+        android:gravity="center"
+        android:padding="12dp"
+        android:textColor="@color/sun" />
+
+    <CheckBox
+        android:id="@+id/oLeafy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:buttonTint="@color/sun"
+        android:text="C'est un arbre qui perd ses feuilles en hiver"
+        android:textColor="@color/fg"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/oCancel"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/input_bg"
+            android:stateListAnimator="@null"
+            android:text="Annuler"
+            android:textAllCaps="false"
+            android:textColor="@color/fg"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/oCapture"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="2"
+            android:textSize="14sp" />
+    </LinearLayout>
+</LinearLayout>

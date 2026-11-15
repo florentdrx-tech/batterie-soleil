@@ -377,6 +377,51 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
             </LinearLayout>
+
+            <!-- Diagnostic -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:text="Diagnostic de l'installation" />
+
+                <TextView
+                    android:id="@+id/diagStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingStart="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="10dp"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/diagText"
+                    style="@style/Body"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/fg" />
+
+                <TextView
+                    android:id="@+id/diagSeason"
+                    style="@style/Body"
+                    android:layout_marginTop="8dp" />
+
+                <LinearLayout
+                    android:id="@+id/diagCauses"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
             </LinearLayout>
 
             <LinearLayout
@@ -600,6 +645,55 @@
                         android:layout_marginTop="14dp"
                         android:text="Enregistrer" />
                 </LinearLayout>
+            </LinearLayout>
+
+            <!-- Ombres -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:text="Ombres (arbres, bâtiments)" />
+
+                <TextView
+                    style="@style/Body"
+                    android:layout_marginTop="4dp"
+                    android:text="Encode ce qui cache le soleil à tes panneaux. L'appli retire le soleil direct aux heures où il passe derrière, selon la saison." />
+
+                <be.florent.soleil.HorizonView
+                    android:id="@+id/horizon"
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:layout_marginTop="12dp" />
+
+                <TextView
+                    style="@style/Body"
+                    android:layout_marginTop="4dp"
+                    android:text="Courbes : trajet du soleil le 21 juin (haute), le 21 mars et le 21 décembre (basse). Blocs verts : arbres à feuilles caduques ; gris : bâtiments et arbres persistants."
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/shadeImpact"
+                    style="@style/Body"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/fg" />
+
+                <LinearLayout
+                    android:id="@+id/obsList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <Button
+                    android:id="@+id/obsAdd"
+                    style="@style/PrimaryButton"
+                    android:layout_marginTop="14dp"
+                    android:text="Ajouter un obstacle" />
             </LinearLayout>
 
             <TextView
