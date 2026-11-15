@@ -1,69 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scroll"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="18dp"
-        android:paddingEnd="18dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="32dp">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
-        <!-- En-tête -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-condensed"
-                    android:text="Soleil &amp; Batterie"
-                    android:textColor="@color/fg"
-                    android:textSize="26sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/subtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="@color/muted"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/refresh"
-                android:layout_width="46dp"
-                android:layout_height="46dp"
-                android:background="@drawable/round_btn"
-                android:contentDescription="Actualiser"
-                android:src="@drawable/ic_refresh" />
-        </LinearLayout>
-
-        <!-- Carte Aujourd'hui -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/hero_bg"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="24dp">
 
+            <!-- En-tête -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -77,490 +35,682 @@
                     android:orientation="vertical">
 
                     <TextView
-                        style="@style/Label"
-                        android:text="Aujourd'hui" />
-
-                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:baselineAligned="true"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/kwh"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="sans-serif-condensed"
-                            android:includeFontPadding="false"
-                            android:text="–"
-                            android:textColor="@color/sun"
-                            android:textSize="64sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="kWh"
-                            android:textColor="@color/muted"
-                            android:textSize="18sp" />
-                    </LinearLayout>
+                        android:fontFamily="sans-serif-condensed"
+                        android:text="Soleil &amp; Batterie"
+                        android:textColor="@color/fg"
+                        android:textSize="26sp"
+                        android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/meta"
+                        android:id="@+id/subtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@color/fg"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/muted"
                         android:textSize="13sp" />
                 </LinearLayout>
 
-                <LinearLayout
-                    android:id="@+id/batteryBox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical"
-                    android:padding="4dp">
-
-                    <be.florent.soleil.BatteryView
-                        android:id="@+id/battery"
-                        android:layout_width="64dp"
-                        android:layout_height="112dp" />
-
-                    <TextView
-                        android:id="@+id/batteryLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="✎ Régler"
-                        android:textColor="@color/muted"
-                        android:textSize="11sp" />
-                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/refresh"
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/round_btn"
+                    android:contentDescription="Actualiser"
+                    android:src="@drawable/ic_refresh" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/verdict"
+            <LinearLayout
+                android:id="@+id/pageHome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <!-- Carte Aujourd'hui -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/hero_bg"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Label"
+                            android:text="Aujourd'hui" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:baselineAligned="true"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/kwh"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-condensed"
+                                android:includeFontPadding="false"
+                                android:text="–"
+                                android:textColor="@color/sun"
+                                android:textSize="64sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="kWh"
+                                android:textColor="@color/muted"
+                                android:textSize="18sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/meta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/fg"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/batteryBox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:padding="4dp">
+
+                        <be.florent.soleil.BatteryView
+                            android:id="@+id/battery"
+                            android:layout_width="64dp"
+                            android:layout_height="112dp" />
+
+                        <TextView
+                            android:id="@+id/batteryLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="✎ Régler"
+                            android:textColor="@color/muted"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/verdict"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/pill_low"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingStart="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="10dp"
+                    android:textColor="@color/sun"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingMultiplier="1.15"
+                    android:textColor="@color/fg"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Que lancer ? -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/pill_low"
-                android:fontFamily="sans-serif-medium"
-                android:paddingStart="14dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="14dp"
-                android:paddingBottom="10dp"
-                android:textColor="@color/sun"
-                android:textSize="14sp" />
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:paddingTop="18dp"
+                android:paddingBottom="12dp">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:layout_marginStart="18dp"
+                    android:text="Que lancer ?" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:clipToPadding="false"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/appDays"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+
+                <TextView
+                    android:id="@+id/appSummary"
+                    style="@style/Body"
+                    android:layout_marginStart="18dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="18dp"
+                    android:textColor="@color/fg" />
+
+                <LinearLayout
+                    android:id="@+id/appList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp" />
+
+                <TextView
+                    android:id="@+id/appManage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:text="Gérer mes appareils ▾"
+                    android:textColor="@color/sun"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- 7 jours -->
+            <TextView
+                style="@style/Label"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="26dp"
+                android:layout_marginBottom="10dp"
+                android:text="Les prochains jours" />
+
+            <LinearLayout
+                android:id="@+id/days"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="6dp" />
 
             <TextView
-                android:id="@+id/tip"
+                android:id="@+id/status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:lineSpacingMultiplier="1.15"
-                android:textColor="@color/fg"
-                android:textSize="14sp"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <!-- Que lancer ? -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/card_bg"
-            android:orientation="vertical"
-            android:paddingTop="18dp"
-            android:paddingBottom="12dp">
-
-            <TextView
-                style="@style/CardTitle"
-                android:layout_marginStart="18dp"
-                android:text="Que lancer ?" />
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:clipToPadding="false"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:id="@+id/appDays"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal" />
-            </HorizontalScrollView>
-
-            <TextView
-                android:id="@+id/appSummary"
-                style="@style/Body"
-                android:layout_marginStart="18dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginEnd="18dp"
-                android:textColor="@color/fg" />
-
-            <LinearLayout
-                android:id="@+id/appList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="vertical"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp" />
-
-            <TextView
-                android:id="@+id/appManage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="?android:attr/selectableItemBackground"
                 android:gravity="center"
-                android:padding="12dp"
-                android:text="Gérer mes appareils ▾"
-                android:textColor="@color/sun"
-                android:textSize="14sp" />
-        </LinearLayout>
-
-        <!-- 7 jours -->
-        <TextView
-            style="@style/Label"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="26dp"
-            android:layout_marginBottom="10dp"
-            android:text="Les prochains jours" />
-
-        <LinearLayout
-            android:id="@+id/days"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/card_bg"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="6dp" />
-
-        <TextView
-            android:id="@+id/status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center"
-            android:textColor="@color/muted"
-            android:textSize="12sp" />
-
-        <!-- Calibration -->
-        <LinearLayout
-            android:id="@+id/calCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:background="@drawable/card_bg"
-            android:orientation="vertical"
-            android:padding="18dp">
-
-            <TextView
-                style="@style/CardTitle"
-                android:text="Ma production réelle" />
-
-            <TextView
-                style="@style/Body"
-                android:layout_marginTop="4dp"
-                android:text="Entre ce que l'onduleur a vraiment produit un jour de la semaine passée : l'appli ajuste toutes ses prévisions (ombrage, saleté, rendement)." />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Label"
-                        android:layout_marginBottom="6dp"
-                        android:text="Jour" />
-
-                    <EditText
-                        android:id="@+id/calDate"
-                        style="@style/Field"
-                        android:cursorVisible="false"
-                        android:focusable="false"
-                        android:inputType="none" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Label"
-                        android:layout_marginBottom="6dp"
-                        android:text="Produit (kWh)" />
-
-                    <EditText
-                        android:id="@+id/calKwh"
-                        style="@style/Field"
-                        android:hint="ex. 3,4"
-                        android:inputType="numberDecimal" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/calBtn"
-                style="@style/PrimaryButton"
-                android:layout_marginTop="14dp"
-                android:text="Ajuster les prévisions" />
-
-            <TextView
-                android:id="@+id/calOut"
-                style="@style/Body"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/calSummary"
-                style="@style/Body"
-                android:layout_marginTop="16dp"
-                android:fontFamily="sans-serif-medium"
-                android:textColor="@color/fg"
-                android:visibility="gone" />
-
-            <LinearLayout
-                android:id="@+id/calList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-        </LinearLayout>
-
-        <!-- Rappels -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/card_bg"
-            android:orientation="vertical"
-            android:padding="18dp">
-
-            <TextView
-                style="@style/CardTitle"
-                android:text="Rappels" />
-
-            <TextView
-                style="@style/Body"
-                android:layout_marginTop="4dp"
-                android:text="Une notification pour ne pas oublier d'encoder tes chiffres. Touche l'heure pour la changer." />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Le matin : niveau de batterie"
-                        android:textColor="@color/fg"
-                        android:textSize="15sp" />
-
-                    <TextView
-                        android:id="@+id/remMorningTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
-                        android:textColor="@color/sun"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <Switch
-                    android:id="@+id/remMorningOn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Le matin : niveau de batterie"
-                    android:thumbTint="@color/sun"
-                    android:trackTint="@color/line" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Le soir : production du jour"
-                        android:textColor="@color/fg"
-                        android:textSize="15sp" />
-
-                    <TextView
-                        android:id="@+id/remEveningTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
-                        android:textColor="@color/sun"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <Switch
-                    android:id="@+id/remEveningOn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="Le soir : production du jour"
-                    android:thumbTint="@color/sun"
-                    android:trackTint="@color/line" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Réglages -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/card_bg"
-            android:orientation="vertical"
-            android:padding="18dp">
-
-            <LinearLayout
-                android:id="@+id/settingsHeader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?android:attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/CardTitle"
-                        android:text="Mon installation" />
-
-                    <TextView
-                        android:id="@+id/settingsSummary"
-                        style="@style/Body"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/chevron"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="▾"
-                    android:textColor="@color/muted"
-                    android:textSize="22sp" />
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/settingsBody"
+                android:id="@+id/pageProd"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
                 android:orientation="vertical"
                 android:visibility="gone">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="sans-serif-condensed"
+                android:text="Ma production"
+                android:textColor="@color/fg"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <!-- Calibration -->
+            <LinearLayout
+                android:id="@+id/calCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
+
                 <TextView
-                    style="@style/Label"
-                    android:layout_marginBottom="6dp"
-                    android:text="Adresse de l'installation" />
+                    style="@style/CardTitle"
+                    android:text="Ma production réelle" />
+
+                <TextView
+                    style="@style/Body"
+                    android:layout_marginTop="4dp"
+                    android:text="Entre ce que l'onduleur a vraiment produit un jour de la semaine passée : l'appli ajuste toutes ses prévisions (ombrage, saleté, rendement)." />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
                     android:orientation="horizontal">
 
-                    <EditText
-                        android:id="@+id/address"
-                        style="@style/Field"
+                    <LinearLayout
                         android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
                         android:layout_weight="1"
-                        android:hint="Rue, numéro, commune"
-                        android:imeOptions="actionSearch"
-                        android:inputType="textPostalAddress" />
+                        android:orientation="vertical">
 
-                    <Button
-                        android:id="@+id/findBtn"
-                        style="@style/PrimaryButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="48dp"
+                        <TextView
+                            style="@style/Label"
+                            android:layout_marginBottom="6dp"
+                            android:text="Jour" />
+
+                        <EditText
+                            android:id="@+id/calDate"
+                            style="@style/Field"
+                            android:cursorVisible="false"
+                            android:focusable="false"
+                            android:inputType="none" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:minWidth="0dp"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:text="Chercher" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Label"
+                            android:layout_marginBottom="6dp"
+                            android:text="Produit (kWh)" />
+
+                        <EditText
+                            android:id="@+id/calKwh"
+                            style="@style/Field"
+                            android:hint="ex. 3,4"
+                            android:inputType="numberDecimal" />
+                    </LinearLayout>
                 </LinearLayout>
 
+                <Button
+                    android:id="@+id/calBtn"
+                    style="@style/PrimaryButton"
+                    android:layout_marginTop="14dp"
+                    android:text="Ajuster les prévisions" />
+
                 <TextView
-                    android:id="@+id/placeOut"
+                    android:id="@+id/calOut"
                     style="@style/Body"
-                    android:layout_marginTop="6dp"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/calSummary"
+                    style="@style/Body"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/fg"
+                    android:visibility="gone" />
 
                 <LinearLayout
-                    android:id="@+id/settingsGrid"
+                    android:id="@+id/calList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
+            </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/pageSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="sans-serif-condensed"
+                android:text="Paramètres"
+                android:textColor="@color/fg"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <!-- Rappels -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:text="Rappels" />
 
                 <TextView
                     style="@style/Body"
-                    android:layout_marginTop="10dp"
-                    android:text="Orientation en degrés boussole : 90 = est, 180 = sud, 270 = ouest." />
+                    android:layout_marginTop="4dp"
+                    android:text="Une notification pour ne pas oublier d'encoder tes chiffres. Touche l'heure pour la changer." />
 
-                <Button
-                    android:id="@+id/saveBtn"
-                    style="@style/PrimaryButton"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Enregistrer" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Le matin : niveau de batterie"
+                            android:textColor="@color/fg"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:id="@+id/remMorningTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp"
+                            android:textColor="@color/sun"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <Switch
+                        android:id="@+id/remMorningOn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="Le matin : niveau de batterie"
+                        android:thumbTint="@color/sun"
+                        android:trackTint="@color/line" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Le soir : production du jour"
+                            android:textColor="@color/fg"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:id="@+id/remEveningTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp"
+                            android:textColor="@color/sun"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <Switch
+                        android:id="@+id/remEveningOn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="Le soir : production du jour"
+                        android:thumbTint="@color/sun"
+                        android:trackTint="@color/line" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Réglages -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:id="@+id/settingsHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/CardTitle"
+                            android:text="Mon installation" />
+
+                        <TextView
+                            android:id="@+id/settingsSummary"
+                            style="@style/Body"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/chevron"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:visibility="gone"
+                        android:textColor="@color/muted"
+                        android:textSize="22sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/settingsBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Label"
+                        android:layout_marginBottom="6dp"
+                        android:text="Adresse de l'installation" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <EditText
+                            android:id="@+id/address"
+                            style="@style/Field"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:hint="Rue, numéro, commune"
+                            android:imeOptions="actionSearch"
+                            android:inputType="textPostalAddress" />
+
+                        <Button
+                            android:id="@+id/findBtn"
+                            style="@style/PrimaryButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:layout_marginStart="8dp"
+                            android:minWidth="0dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:text="Chercher" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/placeOut"
+                        style="@style/Body"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:id="@+id/settingsGrid"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        style="@style/Body"
+                        android:layout_marginTop="10dp"
+                        android:text="Orientation en degrés boussole : 90 = est, 180 = sud, 270 = ouest." />
+
+                    <Button
+                        android:id="@+id/saveBtn"
+                        style="@style/PrimaryButton"
+                        android:layout_marginTop="14dp"
+                        android:text="Enregistrer" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:text="Données météo : Open-Meteo.com"
+                android:textColor="@color/muted"
+                android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
+    </ScrollView>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="center"
-            android:text="Données météo : Open-Meteo.com"
-            android:textColor="@color/muted"
-            android:textSize="11sp" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line" />
+
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/card"
+        android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/tabHome"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tabHomeIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="☀️"
+                    android:textColor="@color/muted"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tabHomeLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Prévisions"
+                    android:textColor="@color/muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tabProd"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tabProdIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📈"
+                    android:textColor="@color/muted"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tabProdLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Ma production"
+                    android:textColor="@color/muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tabSettings"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tabSettingsIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚙️"
+                    android:textColor="@color/muted"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tabSettingsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Paramètres"
+                    android:textColor="@color/muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
     </LinearLayout>
-</ScrollView>
+</LinearLayout>

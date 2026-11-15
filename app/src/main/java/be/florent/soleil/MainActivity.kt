@@ -101,11 +101,10 @@ class MainActivity : Activity() {
         }
         findViewById<Button>(R.id.calBtn).setOnClickListener { calibrate() }
         findViewById<Button>(R.id.saveBtn).setOnClickListener { save() }
-        findViewById<View>(R.id.settingsHeader).setOnClickListener {
-            val open = settingsBody.visibility != View.VISIBLE
-            settingsBody.visibility = if (open) View.VISIBLE else View.GONE
-            chevron.text = if (open) "▴" else "▾"
-        }
+        findViewById<View>(R.id.tabHome).setOnClickListener { showTab(0) }
+        findViewById<View>(R.id.tabProd).setOnClickListener { showTab(1) }
+        findViewById<View>(R.id.tabSettings).setOnClickListener { showTab(2) }
+        showTab(savedInstanceState?.getInt("tab") ?: 0)
 
         // Le soir on encode la production du jour, le matin celle de la veille
         calDate.setText(
@@ -127,18 +126,41 @@ class MainActivity : Activity() {
         handleOpen(intent)
     }
 
+    // ---------- Onglets ----------
+
+    private var tab = 0
+
+    private fun showTab(i: Int) {
+        tab = i
+        val pages = listOf(R.id.pageHome, R.id.pageProd, R.id.pageSettings)
+        val tabs = listOf("tabHome", "tabProd", "tabSettings")
+        pages.forEachIndexed { k, id -> findViewById<View>(id).visibility = if (k == i) View.VISIBLE else View.GONE }
+        tabs.forEachIndexed { k, name ->
+            val col = getColor(if (k == i) R.color.sun else R.color.muted)
+            findViewById<TextView>(resources.getIdentifier("${name}Label", "id", packageName)).setTextColor(col)
+            findViewById<TextView>(resources.getIdentifier("${name}Icon", "id", packageName)).alpha = if (k == i) 1f else 0.6f
+        }
+        findViewById<View>(R.id.refresh).visibility = if (i == 0) View.VISIBLE else View.INVISIBLE
+        findViewById<android.widget.ScrollView>(R.id.scroll).scrollTo(0, 0)
+    }
+
+    override fun onSaveInstanceState(out: Bundle) {
+        super.onSaveInstanceState(out)
+        out.putInt("tab", tab)
+    }
+
     /** Ouverture depuis une notification : saisie du niveau ou de la production. */
     private fun handleOpen(i: android.content.Intent?) {
         val kind = i?.getStringExtra(Reminders.EXTRA_OPEN) ?: return
         i.removeExtra(Reminders.EXTRA_OPEN)
         if (kind == Reminders.MORNING) {
+            showTab(0)
             editLevel()
         } else {
+            showTab(1)
             calDate.setText(LocalDate.now().toString())
             val scroll = findViewById<android.widget.ScrollView>(R.id.scroll)
-            val card = findViewById<View>(R.id.calCard)
             scroll.post {
-                scroll.smoothScrollTo(0, card.top)
                 calKwh.requestFocus()
                 (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
                     .showSoftInput(calKwh, InputMethodManager.SHOW_IMPLICIT)
@@ -721,9 +743,8 @@ class MainActivity : Activity() {
         if (abs(old.lat - values.getValue("lat")) > 0.0005 || abs(old.lon - values.getValue("lon")) > 0.0005) {
             Store.clearPlace(this)
         }
-        settingsBody.visibility = View.GONE
-        chevron.text = "▾"
         fillFields()
+        placeOut.text = "✓ Réglages enregistrés, prévisions recalculées."
         refresh()
     }
 }
