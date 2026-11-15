@@ -611,6 +611,7 @@ class MainActivity : Activity() {
                 r.advice == Advice.YES -> detail.append("☀ $slot")
                 r.planOffPeak -> detail.append("🌙 Heures creuses $slot")
                 r.betterDay != null -> detail.append("☀ Mieux $slot")
+                r.advice == Advice.LATER -> detail.append("Pas de bon jour d'ici 4 jours")
                 else -> detail.append("≈ ${(r.coverage * 100).roundToInt()} % solaire, $slot")
             }
             detail.append(" · ≈ ${eur(r.cost)}")
@@ -626,7 +627,8 @@ class MainActivity : Activity() {
             val (label, bg, col) = when (r.advice) {
                 Advice.YES -> Triple("✓ Oui", R.drawable.pill_good, R.color.batt)
                 Advice.PARTIAL -> Triple("En partie", R.drawable.pill_low, R.color.sun)
-                Advice.LATER -> Triple("À reporter", R.drawable.pill_bad, R.color.bad)
+                Advice.LATER -> if (r.betterDay != null) Triple("À reporter", R.drawable.pill_bad, R.color.bad)
+                    else Triple("Peu de soleil", R.drawable.pill_bad, R.color.bad)
                 Advice.OFFPEAK -> Triple("Heures creuses", R.drawable.pill_night, R.color.night)
             }
             row.addView(TextView(this).apply {

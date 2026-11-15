@@ -125,15 +125,19 @@ object Appliances {
                 }
             }
 
+            // Le meilleur créneau tombe-t-il en heures creuses avec peu de soleil ? (ex. 11 h–17 h en Wallonie)
+            val planCov = coverage(app, surplus(c, days[bestDay]))
+            val cheapPlan = bestTime?.let { Tariffs.cheap(t, it) } == true && planCov < 0.5
             val advice = when {
                 cov >= 0.9 -> Advice.YES
-                bestOff -> Advice.OFFPEAK
-                bestDay > dayIndex -> Advice.LATER
+                bestDay > dayIndex && !bestOff && !cheapPlan -> Advice.LATER
+                bestOff || cheapPlan -> Advice.OFFPEAK
                 cov >= 0.4 -> Advice.PARTIAL
                 else -> Advice.LATER
             }
-            Reco(app, advice, cov, if (bestDay > dayIndex && !bestOff) bestDay else null,
-                bestDay, bestTime, bestOff, bestCost, peakCost)
+            val off = advice == Advice.OFFPEAK
+            Reco(app, advice, cov, if (bestDay > dayIndex && !off) bestDay else null,
+                bestDay, bestTime, off, bestCost, peakCost)
         }
     }
 
