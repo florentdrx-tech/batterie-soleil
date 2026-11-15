@@ -56,7 +56,10 @@ class SolarWidget : AppWidgetProvider() {
                     v.setTextViewText(R.id.verdict, Forecast.verdict(c, k))
                 }
                 val n = fut.getOrNull(1)
-                if (n != null) {
+                val h = Appliances.headline(c, fut, Appliances.all(ctx))
+                if (h != null) {
+                    v.setTextViewText(R.id.next, "💡 $h")
+                } else if (n != null) {
                     val nk = Forecast.est(c, n)
                     val np = (Forecast.battPct(c, nk) * 100).roundToInt()
                     v.setTextViewText(R.id.next, "Demain : %.1f kWh · batterie %d %%".format(nk, np))

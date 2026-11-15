@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg"
@@ -153,6 +154,16 @@
                 android:paddingBottom="10dp"
                 android:textColor="@color/sun"
                 android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:lineSpacingMultiplier="1.15"
+                android:textColor="@color/fg"
+                android:textSize="14sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- Que lancer ? -->
@@ -246,6 +257,7 @@
 
         <!-- Calibration -->
         <LinearLayout
+            android:id="@+id/calCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
@@ -334,6 +346,106 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
+        </LinearLayout>
+
+        <!-- Rappels -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/card_bg"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="Rappels" />
+
+            <TextView
+                style="@style/Body"
+                android:layout_marginTop="4dp"
+                android:text="Une notification pour ne pas oublier d'encoder tes chiffres. Touche l'heure pour la changer." />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Le matin : niveau de batterie"
+                        android:textColor="@color/fg"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/remMorningTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:textColor="@color/sun"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/remMorningOn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Le matin : niveau de batterie"
+                    android:thumbTint="@color/sun"
+                    android:trackTint="@color/line" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Le soir : production du jour"
+                        android:textColor="@color/fg"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/remEveningTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:textColor="@color/sun"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/remEveningOn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Le soir : production du jour"
+                    android:thumbTint="@color/sun"
+                    android:trackTint="@color/line" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Réglages -->

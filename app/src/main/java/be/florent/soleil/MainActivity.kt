@@ -57,6 +57,7 @@ class MainActivity : Activity() {
     private lateinit var appList: LinearLayout
     private lateinit var appManage: TextView
     private var appDay = 0
+    private lateinit var tip: TextView
     private var manageAll = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +87,8 @@ class MainActivity : Activity() {
         appSummary = findViewById(R.id.appSummary)
         appList = findViewById(R.id.appList)
         appManage = findViewById(R.id.appManage)
+        tip = findViewById(R.id.tip)
+        setupReminders()
         appManage.setOnClickListener { manageAll = !manageAll; renderAppliances() }
         findViewById<View>(R.id.batteryBox).setOnClickListener { editLevel() }
 
@@ -104,13 +107,84 @@ class MainActivity : Activity() {
             chevron.text = if (open) "▴" else "▾"
         }
 
-        calDate.setText(LocalDate.now().minusDays(1).toString())
+        // Le soir on encode la production du jour, le matin celle de la veille
+        calDate.setText(
+            (if (java.time.LocalTime.now().hour >= 16) LocalDate.now() else LocalDate.now().minusDays(1)).toString()
+        )
         calDate.setOnClickListener { pickDate() }
 
         fillFields()
         show()
         refresh()
         UpdateWorker.schedule(this)
+        Reminders.schedule(this)
+        handleOpen(intent)
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleOpen(intent)
+    }
+
+    /** Ouverture depuis une notification : saisie du niveau ou de la production. */
+    private fun handleOpen(i: android.content.Intent?) {
+        val kind = i?.getStringExtra(Reminders.EXTRA_OPEN) ?: return
+        i.removeExtra(Reminders.EXTRA_OPEN)
+        if (kind == Reminders.MORNING) {
+            editLevel()
+        } else {
+            calDate.setText(LocalDate.now().toString())
+            val scroll = findViewById<android.widget.ScrollView>(R.id.scroll)
+            val card = findViewById<View>(R.id.calCard)
+            scroll.post {
+                scroll.smoothScrollTo(0, card.top)
+                calKwh.requestFocus()
+                (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+                    .showSoftInput(calKwh, InputMethodManager.SHOW_IMPLICIT)
+            }
+        }
+    }
+
+    // ---------- Rappels ----------
+
+    private fun setupReminders() {
+        val rows = listOf(
+            Triple(Reminders.MORNING, R.id.remMorningOn, R.id.remMorningTime),
+            Triple(Reminders.EVENING, R.id.remEveningOn, R.id.remEveningTime)
+        )
+        for ((kind, swId, timeId) in rows) {
+            val sw = findViewById<android.widget.Switch>(swId)
+            val time = findViewById<TextView>(timeId)
+            fun label() {
+                time.text = String.format(fr, "%02d:%02d", Reminders.hour(this, kind), Reminders.minute(this, kind)) + "  ✎"
+            }
+            label()
+            sw.isChecked = Reminders.enabled(this, kind)
+            sw.setOnCheckedChangeListener { _, on ->
+                Reminders.set(this, kind, on, Reminders.hour(this, kind), Reminders.minute(this, kind))
+                if (on && Reminders.needsPermission(this)) {
+                    requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 7)
+                }
+            }
+            time.setOnClickListener {
+                android.app.TimePickerDialog(this, { _, h, m ->
+                    Reminders.set(this, kind, true, h, m)
+                    sw.isChecked = true
+                    label()
+                    if (Reminders.needsPermission(this)) {
+                        requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 7)
+                    }
+                }, Reminders.hour(this, kind), Reminders.minute(this, kind), true).show()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) {
+        super.onRequestPermissionsResult(code, perms, results)
+        if (code == 7 && results.isNotEmpty() && results[0] != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            status.text = "Notifications refusées : active-les dans les réglages Android pour recevoir les rappels."
+        }
     }
 
     // ---------- Mise en forme ----------
@@ -214,6 +288,7 @@ class MainActivity : Activity() {
             verdict.setBackgroundResource(R.drawable.pill_low)
             verdict.setTextColor(getColor(R.color.sun))
             status.text = ""
+            tip.visibility = View.GONE
             renderAppliances()
             return
         }
@@ -279,6 +354,9 @@ class MainActivity : Activity() {
         }
 
         status.text = "Mis à jour à ${Store.updatedAt(this)} · correction ×${String.format(fr, "%.2f", c.corr)}"
+        val h = Appliances.headline(c, fut, Appliances.all(this))
+        tip.visibility = if (h == null) View.GONE else View.VISIBLE
+        tip.text = "💡 ${h ?: ""}"
         renderAppliances()
     }
 
@@ -477,7 +555,8 @@ class MainActivity : Activity() {
         dlg.findViewById<Button>(R.id.aSave).setOnClickListener {
             val v = num(kwhField)?.takeIf { it >= 0 } ?: app.kwh
             Appliances.save(this, app.id, v, sw.isChecked)
-            renderAppliances()
+            show()
+            SolarWidget.refreshAll(this)
             dlg.dismiss()
         }
         dlg.show()
@@ -549,22 +628,47 @@ class MainActivity : Activity() {
         dlg.window?.setLayout((resources.displayMetrics.widthPixels * 0.92).toInt(),
             ViewGroup.LayoutParams.WRAP_CONTENT)
         val seek = dlg.findViewById<android.widget.SeekBar>(R.id.lSeek)
-        val value = dlg.findViewById<TextView>(R.id.lValue)
+        val value = dlg.findViewById<EditText>(R.id.lValue)
+        var syncing = false
         seek.progress = Store.level(this)?.first?.roundToInt() ?: 50
-        value.text = "${seek.progress} %"
+        value.setText(seek.progress.toString())
         seek.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(s: android.widget.SeekBar, v: Int, fromUser: Boolean) { value.text = "$v %" }
+            override fun onProgressChanged(s: android.widget.SeekBar, v: Int, fromUser: Boolean) {
+                if (syncing) return
+                syncing = true
+                value.setText(v.toString())
+                value.setSelection(value.text.length)
+                syncing = false
+            }
             override fun onStartTrackingTouch(s: android.widget.SeekBar) {}
             override fun onStopTrackingTouch(s: android.widget.SeekBar) {}
         })
-        dlg.findViewById<Button>(R.id.lMinus).setOnClickListener { seek.progress = (seek.progress - 5).coerceAtLeast(0) }
-        dlg.findViewById<Button>(R.id.lPlus).setOnClickListener { seek.progress = (seek.progress + 5).coerceAtMost(100) }
+        value.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(t: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(t: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun afterTextChanged(e: android.text.Editable?) {
+                if (syncing) return
+                val v = e?.toString()?.toIntOrNull() ?: return
+                syncing = true
+                seek.progress = v.coerceIn(0, 100)
+                syncing = false
+            }
+        })
+        fun current(): Int = (value.text.toString().toIntOrNull() ?: seek.progress).coerceIn(0, 100)
+        fun saveLevel() {
+            Store.setLevel(this, current().toDouble()); show(); SolarWidget.refreshAll(this); dlg.dismiss()
+        }
+        value.setOnEditorActionListener { _, id, _ ->
+            if (id == EditorInfo.IME_ACTION_DONE) { saveLevel(); true } else false
+        }
+        dlg.findViewById<Button>(R.id.lMinus).setOnClickListener { seek.progress = (current() - 5).coerceAtLeast(0) }
+        dlg.findViewById<Button>(R.id.lPlus).setOnClickListener { seek.progress = (current() + 5).coerceAtMost(100) }
         dlg.findViewById<Button>(R.id.lClear).setOnClickListener {
             Store.clearLevel(this); show(); SolarWidget.refreshAll(this); dlg.dismiss()
         }
-        dlg.findViewById<Button>(R.id.lSave).setOnClickListener {
-            Store.setLevel(this, seek.progress.toDouble()); show(); SolarWidget.refreshAll(this); dlg.dismiss()
-        }
+        dlg.findViewById<Button>(R.id.lSave).setOnClickListener { saveLevel() }
+        dlg.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        value.requestFocus()
         dlg.show()
     }
 

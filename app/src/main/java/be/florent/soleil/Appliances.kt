@@ -7,7 +7,7 @@ import kotlin.math.min
 /** Appareil ménager : consommation moyenne par utilisation (kWh) et puissance (kW). */
 data class Appliance(
     val id: String, val emoji: String, val name: String,
-    val kwh: Double, val kw: Double, val on: Boolean
+    val kwh: Double, val kw: Double, val on: Boolean, val short: String = name
 )
 
 enum class Advice { YES, PARTIAL, LATER }
@@ -22,16 +22,16 @@ object Appliances {
      * (pas de cuisson ni de petits appareils à la conso négligeable).
      */
     private val CATALOG = listOf(
-        Appliance("ll40", "🧺", "Lave-linge 40 °C", 0.8, 2.0, true),
-        Appliance("ll60", "🧺", "Lave-linge 60 °C", 1.3, 2.2, false),
-        Appliance("lv", "🍽️", "Lave-vaisselle (éco)", 0.9, 2.0, true),
-        Appliance("sl_res", "🔥", "Séchoir à condensation", 3.5, 2.5, true),
-        Appliance("sl_pac", "🌀", "Séchoir pompe à chaleur", 1.5, 0.8, false),
-        Appliance("boiler", "🚿", "Boiler électrique (chauffe)", 3.5, 2.4, false),
-        Appliance("ve", "🚗", "Voiture électrique (+100 km)", 17.0, 3.7, false),
-        Appliance("clim", "❄️", "Climatisation (3 h)", 3.0, 1.0, false),
-        Appliance("piscine", "🏊", "Pompe de piscine (8 h)", 6.0, 0.75, false),
-        Appliance("fer", "👕", "Repassage (1 h)", 1.0, 2.0, false)
+        Appliance("ll40", "🧺", "Lave-linge 40 °C", 0.8, 2.0, true, "le lave-linge"),
+        Appliance("ll60", "🧺", "Lave-linge 60 °C", 1.3, 2.2, false, "le lave-linge 60°"),
+        Appliance("lv", "🍽️", "Lave-vaisselle (éco)", 0.9, 2.0, true, "le lave-vaisselle"),
+        Appliance("sl_res", "🔥", "Séchoir à condensation", 3.5, 2.5, true, "le séchoir"),
+        Appliance("sl_pac", "🌀", "Séchoir pompe à chaleur", 1.5, 0.8, false, "le séchoir"),
+        Appliance("boiler", "🚿", "Boiler électrique (chauffe)", 3.5, 2.4, false, "le boiler"),
+        Appliance("ve", "🚗", "Voiture électrique (+100 km)", 17.0, 3.7, false, "la recharge de la voiture"),
+        Appliance("clim", "❄️", "Climatisation (3 h)", 3.0, 1.0, false, "la clim"),
+        Appliance("piscine", "🏊", "Pompe de piscine (8 h)", 6.0, 0.75, false, "la pompe de piscine"),
+        Appliance("fer", "👕", "Repassage (1 h)", 1.0, 2.0, false, "le repassage")
     )
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("soleil", Context.MODE_PRIVATE)
@@ -105,5 +105,37 @@ object Appliances {
             if (v > bestVal) { bestVal = v; bestStart = h }
         }
         return if (bestStart < 0 || bestVal < 0.05) null else Pair(bestStart, bestVal)
+    }
+
+    private fun joinFr(l: List<String>): String = when (l.size) {
+        0 -> ""
+        1 -> l[0]
+        else -> l.dropLast(1).joinToString(", ") + " et " + l.last()
+    }
+
+    private fun dayName(i: Int, days: List<Day>): String = when (i) {
+        0 -> "aujourd'hui"
+        1 -> "demain"
+        else -> java.time.LocalDate.parse(days[i].date)
+            .format(java.time.format.DateTimeFormatter.ofPattern("EEEE", java.util.Locale.FRENCH))
+    }
+
+    /** Conseil du jour en une phrase, pour l'appli, le widget et la notification du matin. */
+    fun headline(c: Config, days: List<Day>, list: List<Appliance>): String? {
+        if (days.isEmpty()) return null
+        val recos = advise(c, days, 0, list)
+        if (recos.isEmpty()) return null
+        val yes = recos.filter { it.advice == Advice.YES }.map { it.app.short }.distinct()
+        val wait = recos.filter { it.advice != Advice.YES && it.betterDay != null }
+            .groupBy { it.betterDay!! }.minByOrNull { it.key }
+        val waitTxt = wait?.let { (d, rs) ->
+            "attends ${dayName(d, days)} pour ${joinFr(rs.map { it.app.short }.distinct())}"
+        }
+        return when {
+            yes.isNotEmpty() && waitTxt != null -> "Lance ${joinFr(yes)} aujourd'hui, $waitTxt"
+            yes.isNotEmpty() -> "Bonne journée pour ${joinFr(yes)} : programme-${if (yes.size > 1) "les" else "le"} aujourd'hui"
+            waitTxt != null -> waitTxt.replaceFirstChar { it.uppercase() }
+            else -> "Peu de soleil cette semaine : pas de jour idéal pour les machines"
+        }
     }
 }

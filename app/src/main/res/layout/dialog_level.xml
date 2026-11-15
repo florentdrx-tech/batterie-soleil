@@ -11,15 +11,49 @@
         style="@style/CardTitle"
         android:text="Niveau actuel de la batterie" />
 
-    <TextView
-        android:id="@+id/lValue"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:fontFamily="sans-serif-condensed"
-        android:textColor="@color/batt"
-        android:textSize="56sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/lValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/input_bg"
+            android:fontFamily="sans-serif-condensed"
+            android:gravity="center"
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:maxLength="3"
+            android:minEms="3"
+            android:paddingStart="12dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="4dp"
+            android:selectAllOnFocus="true"
+            android:textColor="@color/batt"
+            android:textSize="48sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="sans-serif-condensed"
+            android:text="%"
+            android:textColor="@color/batt"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/Body"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="Tape le pourcentage ou utilise le curseur" />
 
     <SeekBar
         android:id="@+id/lSeek"
