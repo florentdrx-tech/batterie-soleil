@@ -345,8 +345,6 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
-            </LinearLayout>
-
             <!-- Calibration -->
             <LinearLayout
                 android:id="@+id/calCard"
@@ -439,7 +437,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
             </LinearLayout>
-
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/pageSettings"
