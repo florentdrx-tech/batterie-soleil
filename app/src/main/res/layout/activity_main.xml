@@ -178,6 +178,22 @@
                     android:visibility="gone" />
             </LinearLayout>
 
+                <TextView
+                    android:id="@+id/homeAlert"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/pill_bad"
+                    android:fontFamily="sans-serif-medium"
+                    android:lineSpacingMultiplier="1.15"
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="12dp"
+                    android:textColor="@color/bad"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
             <!-- Que lancer ? -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -285,6 +301,52 @@
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
+            <!-- Diagnostic -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:text="Diagnostic de l'installation" />
+
+                <TextView
+                    android:id="@+id/diagStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingStart="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="10dp"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/diagText"
+                    style="@style/Body"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/fg" />
+
+                <TextView
+                    android:id="@+id/diagSeason"
+                    style="@style/Body"
+                    android:layout_marginTop="8dp" />
+
+                <LinearLayout
+                    android:id="@+id/diagCauses"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            </LinearLayout>
+
             <!-- Calibration -->
             <LinearLayout
                 android:id="@+id/calCard"
@@ -378,51 +440,6 @@
                     android:orientation="vertical" />
             </LinearLayout>
 
-            <!-- Diagnostic -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/card_bg"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <TextView
-                    style="@style/CardTitle"
-                    android:text="Diagnostic de l'installation" />
-
-                <TextView
-                    android:id="@+id/diagStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:paddingStart="14dp"
-                    android:paddingTop="10dp"
-                    android:paddingEnd="14dp"
-                    android:paddingBottom="10dp"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/diagText"
-                    style="@style/Body"
-                    android:layout_marginTop="10dp"
-                    android:textColor="@color/fg" />
-
-                <TextView
-                    android:id="@+id/diagSeason"
-                    style="@style/Body"
-                    android:layout_marginTop="8dp" />
-
-                <LinearLayout
-                    android:id="@+id/diagCauses"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:orientation="vertical" />
-            </LinearLayout>
-
-            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/pageSettings"

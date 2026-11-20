@@ -65,6 +65,7 @@ class MainActivity : Activity() {
     private lateinit var diagText: TextView
     private lateinit var diagSeason: TextView
     private lateinit var diagCauses: LinearLayout
+    private lateinit var homeAlert: TextView
     private var manageAll = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,6 +103,8 @@ class MainActivity : Activity() {
         diagText = findViewById(R.id.diagText)
         diagSeason = findViewById(R.id.diagSeason)
         diagCauses = findViewById(R.id.diagCauses)
+        homeAlert = findViewById(R.id.homeAlert)
+        homeAlert.setOnClickListener { showTab(1) }
         findViewById<Button>(R.id.obsAdd).setOnClickListener {
             ObstacleDialog(this) { o ->
                 Store.saveObstacles(this, Store.obstacles(this) + o)
@@ -755,6 +758,7 @@ class MainActivity : Activity() {
         val kwc = c.p1 + c.p2
         val today = LocalDate.now().toString()
         diagCauses.removeAllViews()
+        homeAlert.visibility = View.GONE
 
         val (fNow, nSeason) = Forecast.seasonInfo(c, today)
         diagSeason.text = when {
@@ -793,45 +797,76 @@ class MainActivity : Activity() {
             }
         }
 
-        val causes = ArrayList<Pair<String, String>>()
+        // Conseils : icône, titre, explication
+        val tips = ArrayList<Triple<String, String, String>>()
+        var drop = 0
         if (n >= 6) {
             val rr = ratio(list.take(3)); val ro = ratio(list.drop(3))
             if (ro > 0 && rr < ro * 0.75) {
-                causes.add("📉" to "Baisse récente : tes 3 derniers jours sont ${((1 - rr / ro) * 100).roundToInt()} % sous les précédents. Regarde l'appli de l'onduleur : message d'erreur, panneau ou micro-onduleur en défaut.")
+                drop = ((1 - rr / ro) * 100).roundToInt()
+                tips.add(Triple("📉", "Baisse récente de $drop %",
+                    "Tes 3 derniers jours sont nettement sous les précédents. Une baisse brutale vient rarement de la saleté : regarde d'abord l'écran ou l'appli de l'onduleur (message d'erreur, chaîne de panneaux à zéro)."))
             }
         }
         if (r > 1.2) {
-            causes.add("🔎" to "Tu produis plus que prévu : vérifie la puissance (kWc), l'orientation et l'inclinaison encodées dans Paramètres.")
+            tips.add(Triple("🔎", "Vérifie tes réglages",
+                "Tu produis plus que prévu : la puissance (kWc), l'orientation ou l'inclinaison encodées dans Paramètres sont peut-être sous-estimées."))
         }
         if (r < 0.9) {
             val obs = Store.obstacles(this)
-            causes.add("🌳" to if (obs.isEmpty())
-                "Ombres : aucun obstacle encodé. Un arbre ou une maison voisine peut couper une grande partie de la production en hiver, quand le soleil est bas. Relève-les dans Paramètres › Ombres."
-            else "Ombres : ${obs.size} obstacle${if (obs.size > 1) "s" else ""} pris en compte. S'il en manque (cheminée, antenne, haie, maison voisine), ajoute-les.")
-            causes.add("🧽" to if (c.tilt < 15)
-                "Saleté : avec une inclinaison faible (${c.tilt.roundToInt()}°), la pluie nettoie mal. Nettoie les panneaux, puis compare quelques jours avant et après."
-            else "Saleté : pollen, fientes, mousse, poussière d'un champ ou d'une route. Nettoie les panneaux, puis compare quelques jours avant et après.")
-            causes.add("🧭" to "Orientation et inclinaison : vérifie-les avec la boussole 🧭 et l'inclinomètre 📐 dans Paramètres. Une erreur de 90° fausse fortement la prévision.")
-            causes.add("🔋" to "Batterie pleine et injection bridée : si ton onduleur limite l'injection sur le réseau, il réduit la production dès que la batterie est pleine. Encode plutôt des jours où elle n'était pas pleine.")
-            causes.add("⚡" to "Panne partielle : si une chaîne de panneaux ne produit plus, la production plafonne même par grand soleil. Compare la production par chaîne ou par panneau dans l'appli de l'onduleur.")
-            if (LocalDate.now().monthValue in listOf(11, 12, 1, 2)) {
-                causes.add("❄️" to "Givre ou neige : en hiver, les panneaux peuvent rester couverts une partie de la matinée.")
+            tips.add(Triple("🧽", "Nettoie les panneaux",
+                (if (c.tilt < 15) "Avec une inclinaison faible (${c.tilt.roundToInt()}°), la pluie nettoie mal et la saleté s'accumule. " else
+                    "Pollen, fientes, mousse ou poussière d'un champ ou d'une route peuvent faire perdre 5 à 15 %. ") +
+                "Utilise de l'eau claire (idéalement déminéralisée) et une brosse douce ou une raclette à manche télescopique, tôt le matin ou le soir quand les panneaux sont froids. " +
+                "Pas de nettoyeur haute pression ni de détergent. Ne monte pas sur le toit : si l'accès est risqué, fais appel à un professionnel. " +
+                "Encode ensuite quelques jours pour comparer avant et après."))
+            tips.add(Triple("🌳", if (obs.isEmpty()) "Relève les ombres" else "Complète les ombres",
+                if (obs.isEmpty()) "Aucun obstacle n'est encodé. En hiver, le soleil est bas : un arbre ou une maison voisine peut couper une grande partie de la production. Relève-les dans Paramètres › Ombres. Si l'arbre est chez toi, un élagage peut faire gagner beaucoup."
+                else "${obs.size} obstacle${if (obs.size > 1) "s" else ""} pris en compte. S'il en manque (cheminée, antenne, haie, maison voisine), ajoute-les. Si un arbre chez toi fait de l'ombre, un élagage peut faire gagner beaucoup."))
+            tips.add(Triple("⚡", "Contrôle l'onduleur",
+                "Regarde la production par chaîne ou par panneau dans l'appli de l'onduleur. Si une chaîne produit beaucoup moins que l'autre par grand soleil, un câble, un connecteur ou un optimiseur est peut-être en défaut : contacte ton installateur, c'est souvent sous garantie."))
+            tips.add(Triple("🧭", "Vérifie l'orientation et l'inclinaison",
+                "Mesure-les avec la boussole 🧭 et l'inclinomètre 📐 dans Paramètres. Une erreur de 90° fausse fortement la prévision."))
+            tips.add(Triple("🔋", "Batterie pleine et injection bridée",
+                "Si ton onduleur limite l'injection sur le réseau, il réduit la production dès que la batterie est pleine. Encode plutôt des jours où la batterie n'était pas pleine."))
+            if (LocalDate.now().monthValue in listOf(11, 12, 1, 2, 3)) {
+                tips.add(Triple("❄️", "Givre ou neige",
+                    "En hiver, les panneaux peuvent rester couverts une partie de la matinée. Ne les gratte pas et n'y verse pas d'eau chaude : attends que ça fonde."))
             }
-        } else if (causes.isEmpty()) {
-            causes.add("👍" to "Continue d'encoder ta production de temps en temps, surtout aux changements de saison, pour garder des prévisions justes.")
+            if (r < 0.7) {
+                tips.add(Triple("🛠️", "Fais contrôler l'installation",
+                    "Si rien de tout ça n'explique l'écart, ton installateur peut mesurer chaque chaîne ou faire une thermographie pour repérer un panneau défectueux."))
+            }
+        } else if (tips.isEmpty()) {
+            tips.add(Triple("👍", "Tout va bien",
+                "Continue d'encoder ta production de temps en temps, surtout aux changements de saison, pour garder des prévisions justes. Un nettoyage par an (au printemps, après le pollen) suffit en général."))
+        }
+
+        // Bandeau sur l'accueil si la production est anormalement basse
+        if ((n >= 3 && r < 0.8) || drop > 0) {
+            homeAlert.visibility = View.VISIBLE
+            homeAlert.text = if (drop > 0) "⚠ Ta production a baissé de $drop % ces derniers jours. Touche pour voir les conseils."
+                else "⚠ Tes panneaux produisent ${(r * 100).roundToInt()} % de ce qu'ils devraient. Touche pour voir les conseils."
         }
 
         val dp = resources.displayMetrics.density
-        causes.forEach { (icon, txt) ->
+        tips.forEach { (icon, title, txt) ->
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
-                setPadding(0, (10 * dp).toInt(), 0, 0)
+                setPadding(0, (12 * dp).toInt(), 0, 0)
             }
             row.addView(TextView(this).apply { text = icon; textSize = 18f },
                 LinearLayout.LayoutParams((34 * dp).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT))
-            row.addView(TextView(this).apply {
-                text = txt; textSize = 13f; setTextColor(getColor(R.color.fg)); setLineSpacing(0f, 1.15f)
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            col.addView(TextView(this).apply {
+                text = title; textSize = 14f; setTextColor(getColor(R.color.fg))
+                typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+            })
+            col.addView(TextView(this).apply {
+                text = txt; textSize = 13f; setTextColor(getColor(R.color.muted)); setLineSpacing(0f, 1.15f)
+                setPadding(0, (2 * dp).toInt(), 0, 0)
+            })
+            row.addView(col, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             diagCauses.addView(row)
         }
     }
@@ -981,7 +1016,10 @@ class MainActivity : Activity() {
         }
         Store.addCalib(this, Calib(date, value, base))
         val n = Store.calibs(this).size.coerceAtMost(Store.CALIB_WINDOW)
-        calOut.text = "Enregistré. Correction calculée sur $n jour${if (n > 1) "s" else ""}."
+        val dayPct = (value / base * 100).roundToInt()
+        calOut.text = if (dayPct < 60)
+            "Enregistré. Ce jour-là, tu as produit $dayPct % de la prévision. Si le ciel était dégagé, regarde les conseils du diagnostic ci-dessus."
+        else "Enregistré. Correction calculée sur $n jour${if (n > 1) "s" else ""}."
         calKwh.setText("")
         fillFields()
         show()
