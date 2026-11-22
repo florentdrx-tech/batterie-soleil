@@ -38,7 +38,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-condensed"
-                        android:text="Soleil &amp; Batterie"
+                        android:text="@string/t001"
                         android:textColor="@color/fg"
                         android:textSize="26sp"
                         android:textStyle="bold" />
@@ -57,7 +57,7 @@
                     android:layout_width="46dp"
                     android:layout_height="46dp"
                     android:background="@drawable/round_btn"
-                    android:contentDescription="Actualiser"
+                    android:contentDescription="@string/t002"
                     android:src="@drawable/ic_refresh" />
             </LinearLayout>
 
@@ -90,7 +90,7 @@
 
                         <TextView
                             style="@style/Label"
-                            android:text="Aujourd'hui" />
+                            android:text="@string/t003" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -147,7 +147,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="✎ Régler"
+                            android:text="@string/t004"
                             android:textColor="@color/muted"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -207,7 +207,7 @@
                 <TextView
                     style="@style/CardTitle"
                     android:layout_marginStart="18dp"
-                    android:text="Que lancer ?" />
+                    android:text="@string/t005" />
 
                 <HorizontalScrollView
                     android:layout_width="match_parent"
@@ -250,7 +250,7 @@
                     android:background="?android:attr/selectableItemBackground"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:text="Gérer mes appareils ▾"
+                    android:text="@string/t006"
                     android:textColor="@color/sun"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -261,7 +261,7 @@
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="26dp"
                 android:layout_marginBottom="10dp"
-                android:text="Les prochains jours" />
+                android:text="@string/t007" />
 
             <LinearLayout
                 android:id="@+id/days"
@@ -296,7 +296,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:fontFamily="sans-serif-condensed"
-                android:text="Ma production"
+                android:text="@string/t008"
                 android:textColor="@color/fg"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -312,7 +312,7 @@
 
                 <TextView
                     style="@style/CardTitle"
-                    android:text="Diagnostic de l'installation" />
+                    android:text="@string/t009" />
 
                 <TextView
                     android:id="@+id/diagStatus"
@@ -357,12 +357,12 @@
 
                 <TextView
                     style="@style/CardTitle"
-                    android:text="Ma production réelle" />
+                    android:text="@string/t010" />
 
                 <TextView
                     style="@style/Body"
                     android:layout_marginTop="4dp"
-                    android:text="Entre ce que l'onduleur a vraiment produit un jour de la semaine passée : l'appli ajuste toutes ses prévisions (ombrage, saleté, rendement)." />
+                    android:text="@string/t011" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -380,7 +380,7 @@
                         <TextView
                             style="@style/Label"
                             android:layout_marginBottom="6dp"
-                            android:text="Jour" />
+                            android:text="@string/t012" />
 
                         <EditText
                             android:id="@+id/calDate"
@@ -400,12 +400,12 @@
                         <TextView
                             style="@style/Label"
                             android:layout_marginBottom="6dp"
-                            android:text="Produit (kWh)" />
+                            android:text="@string/t013" />
 
                         <EditText
                             android:id="@+id/calKwh"
                             style="@style/Field"
-                            android:hint="ex. 3,4"
+                            android:hint="@string/t014"
                             android:inputType="numberDecimal" />
                     </LinearLayout>
                 </LinearLayout>
@@ -414,7 +414,7 @@
                     android:id="@+id/calBtn"
                     style="@style/PrimaryButton"
                     android:layout_marginTop="14dp"
-                    android:text="Ajuster les prévisions" />
+                    android:text="@string/t015" />
 
                 <TextView
                     android:id="@+id/calOut"
@@ -451,7 +451,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:fontFamily="sans-serif-condensed"
-                android:text="Paramètres"
+                android:text="@string/t016"
                 android:textColor="@color/fg"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -467,12 +467,12 @@
 
                 <TextView
                     style="@style/CardTitle"
-                    android:text="Rappels" />
+                    android:text="@string/t017" />
 
                 <TextView
                     style="@style/Body"
                     android:layout_marginTop="4dp"
-                    android:text="Une notification pour ne pas oublier d'encoder tes chiffres. Touche l'heure pour la changer." />
+                    android:text="@string/t018" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -490,7 +490,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Le matin : niveau de batterie"
+                            android:text="@string/t019"
                             android:textColor="@color/fg"
                             android:textSize="15sp" />
 
@@ -510,7 +510,7 @@
                         android:id="@+id/remMorningOn"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="Le matin : niveau de batterie"
+                        android:contentDescription="@string/t019"
                         android:thumbTint="@color/sun"
                         android:trackTint="@color/line" />
                 </LinearLayout>
@@ -530,7 +530,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Le soir : production du jour"
+                            android:text="@string/t020"
                             android:textColor="@color/fg"
                             android:textSize="15sp" />
 
@@ -550,7 +550,7 @@
                         android:id="@+id/remEveningOn"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="Le soir : production du jour"
+                        android:contentDescription="@string/t020"
                         android:thumbTint="@color/sun"
                         android:trackTint="@color/line" />
                 </LinearLayout>
@@ -581,7 +581,7 @@
 
                         <TextView
                             style="@style/CardTitle"
-                            android:text="Mon installation" />
+                            android:text="@string/t021" />
 
                         <TextView
                             android:id="@+id/settingsSummary"
@@ -609,7 +609,7 @@
                     <TextView
                         style="@style/Label"
                         android:layout_marginBottom="6dp"
-                        android:text="Adresse de l'installation" />
+                        android:text="@string/t022" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -621,7 +621,7 @@
                             style="@style/Field"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:hint="Rue, numéro, commune"
+                            android:hint="@string/t023"
                             android:imeOptions="actionSearch"
                             android:inputType="textPostalAddress" />
 
@@ -634,7 +634,7 @@
                             android:minWidth="0dp"
                             android:paddingStart="16dp"
                             android:paddingEnd="16dp"
-                            android:text="Chercher" />
+                            android:text="@string/t024" />
                     </LinearLayout>
 
                     <TextView
@@ -652,13 +652,13 @@
                     <TextView
                         style="@style/Body"
                         android:layout_marginTop="10dp"
-                        android:text="Orientation en degrés boussole : 90 = est, 180 = sud, 270 = ouest." />
+                        android:text="@string/t025" />
 
                     <Button
                         android:id="@+id/saveBtn"
                         style="@style/PrimaryButton"
                         android:layout_marginTop="14dp"
-                        android:text="Enregistrer" />
+                        android:text="@string/t026" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -673,12 +673,12 @@
 
                 <TextView
                     style="@style/CardTitle"
-                    android:text="Mon tarif d'électricité" />
+                    android:text="@string/t027" />
 
                 <TextView
                     style="@style/Body"
                     android:layout_marginTop="4dp"
-                    android:text="Sert à estimer le coût de chaque appareil et à conseiller les heures creuses quand le soleil manque." />
+                    android:text="@string/t028" />
 
                 <RadioGroup
                     android:id="@+id/tarType"
@@ -693,7 +693,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:buttonTint="@color/sun"
-                        android:text="Bi-horaire"
+                        android:text="@string/t029"
                         android:textColor="@color/fg" />
 
                     <RadioButton
@@ -702,7 +702,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:buttonTint="@color/sun"
-                        android:text="Mono-horaire"
+                        android:text="@string/t030"
                         android:textColor="@color/fg" />
                 </RadioGroup>
 
@@ -715,41 +715,61 @@
                     <TextView
                         style="@style/Label"
                         android:layout_marginTop="14dp"
-                        android:text="Heures creuses" />
+                        android:text="@string/t031" />
 
-                    <LinearLayout
+                    <HorizontalScrollView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:orientation="horizontal">
+                        android:scrollbars="none">
 
-                        <TextView
-                            android:id="@+id/tarPresetWal"
+                            <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@drawable/chip_off"
-                            android:paddingStart="14dp"
-                            android:paddingTop="8dp"
-                            android:paddingEnd="14dp"
-                            android:paddingBottom="8dp"
-                            android:text="Wallonie 2026"
-                            android:textColor="@color/fg"
-                            android:textSize="13sp" />
+                                                        android:orientation="horizontal">
 
-                        <TextView
-                            android:id="@+id/tarPresetClassic"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/chip_off"
-                            android:paddingStart="14dp"
-                            android:paddingTop="8dp"
-                            android:paddingEnd="14dp"
-                            android:paddingBottom="8dp"
-                            android:text="22 h–7 h + week-end"
-                            android:textColor="@color/fg"
-                            android:textSize="13sp" />
-                    </LinearLayout>
+                            <TextView
+                                android:id="@+id/tarPresetWal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/chip_off"
+                                android:paddingStart="14dp"
+                                android:paddingTop="8dp"
+                                android:paddingEnd="14dp"
+                                android:paddingBottom="8dp"
+                                android:text="@string/t032"
+                                android:textColor="@color/fg"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tarPresetClassic"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/chip_off"
+                                android:paddingStart="14dp"
+                                android:paddingTop="8dp"
+                                android:paddingEnd="14dp"
+                                android:paddingBottom="8dp"
+                                android:text="@string/t033"
+                                android:textColor="@color/fg"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tarPresetFl21"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/chip_off"
+                                android:paddingStart="14dp"
+                                android:paddingTop="8dp"
+                                android:paddingEnd="14dp"
+                                android:paddingBottom="8dp"
+                                android:text="@string/t034"
+                                android:textColor="@color/fg"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -763,7 +783,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp"
-                        android:text="De"
+                        android:text="@string/t035"
                         android:textColor="@color/fg"
                         android:textSize="14sp" />
 
@@ -782,7 +802,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp"
-                        android:text="h à"
+                        android:text="@string/t036"
                         android:textColor="@color/fg"
                         android:textSize="14sp" />
 
@@ -801,7 +821,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp"
-                        android:text="h"
+                        android:text="@string/t037"
                         android:textColor="@color/fg"
                         android:textSize="14sp" />
                     </LinearLayout>
@@ -818,7 +838,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp"
-                        android:text="et de"
+                        android:text="@string/t038"
                         android:textColor="@color/fg"
                         android:textSize="14sp" />
 
@@ -837,7 +857,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp"
-                        android:text="h à"
+                        android:text="@string/t036"
                         android:textColor="@color/fg"
                         android:textSize="14sp" />
 
@@ -856,7 +876,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp"
-                        android:text="h"
+                        android:text="@string/t037"
                         android:textColor="@color/fg"
                         android:textSize="14sp" />
                     </LinearLayout>
@@ -867,8 +887,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
                         android:buttonTint="@color/sun"
-                        android:text="Tout le week-end en heures creuses"
+                        android:text="@string/t039"
                         android:textColor="@color/fg" />
+
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -885,7 +906,7 @@
                             <TextView
                                 style="@style/Label"
                                 android:layout_marginBottom="6dp"
-                                android:text="Heures pleines (€/kWh)" />
+                                android:text="@string/t040" />
 
                             <EditText
                                 android:id="@+id/tarHp"
@@ -908,7 +929,7 @@
                             <TextView
                                 style="@style/Label"
                                 android:layout_marginBottom="6dp"
-                                android:text="Heures creuses (€/kWh)" />
+                                android:text="@string/t041" />
 
                             <EditText
                                 android:id="@+id/tarHc"
@@ -936,7 +957,7 @@
                         <TextView
                             style="@style/Label"
                             android:layout_marginBottom="6dp"
-                            android:text="Prix du kWh (€/kWh)" />
+                            android:text="@string/t042" />
 
                         <EditText
                             android:id="@+id/tarMonoPrice"
@@ -962,7 +983,7 @@
                         <TextView
                             style="@style/Label"
                             android:layout_marginBottom="6dp"
-                            android:text="Revente du surplus injecté (€/kWh)" />
+                            android:text="@string/t043" />
 
                         <EditText
                             android:id="@+id/tarInj"
@@ -973,10 +994,19 @@
                     </LinearLayout>
                 </LinearLayout>
 
+
+                <CheckBox
+                    android:id="@+id/tarCapa"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:buttonTint="@color/sun"
+                    android:text="@string/t044"
+                    android:textColor="@color/fg" />
                 <TextView
                     style="@style/Body"
                     android:layout_marginTop="8dp"
-                    android:text="Mets les prix tout compris (énergie, réseau et taxes) de ta fiche tarifaire. Les valeurs proposées sont des exemples." />
+                    android:text="@string/t045" />
 
                 <TextView
                     android:id="@+id/tarOut"
@@ -989,7 +1019,7 @@
                     android:id="@+id/tarSave"
                     style="@style/PrimaryButton"
                     android:layout_marginTop="12dp"
-                    android:text="Enregistrer le tarif" />
+                    android:text="@string/t046" />
             </LinearLayout>
 
 
@@ -1004,12 +1034,12 @@
 
                 <TextView
                     style="@style/CardTitle"
-                    android:text="Ombres (arbres, bâtiments)" />
+                    android:text="@string/t047" />
 
                 <TextView
                     style="@style/Body"
                     android:layout_marginTop="4dp"
-                    android:text="Encode ce qui cache le soleil à tes panneaux. L'appli retire le soleil direct aux heures où il passe derrière, selon la saison." />
+                    android:text="@string/t048" />
 
                 <be.florent.soleil.HorizonView
                     android:id="@+id/horizon"
@@ -1020,7 +1050,7 @@
                 <TextView
                     style="@style/Body"
                     android:layout_marginTop="4dp"
-                    android:text="Courbes : trajet du soleil le 21 juin (haute), le 21 mars et le 21 décembre (basse). Blocs verts : arbres à feuilles caduques ; gris : bâtiments et arbres persistants."
+                    android:text="@string/t049"
                     android:textSize="11sp" />
 
                 <TextView
@@ -1039,7 +1069,7 @@
                     android:id="@+id/obsAdd"
                     style="@style/PrimaryButton"
                     android:layout_marginTop="14dp"
-                    android:text="Ajouter un obstacle" />
+                    android:text="@string/t050" />
             </LinearLayout>
 
             <TextView
@@ -1047,7 +1077,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:gravity="center"
-                android:text="Données météo : Open-Meteo.com"
+                android:text="@string/t051"
                 android:textColor="@color/muted"
                 android:textSize="11sp" />
             </LinearLayout>
@@ -1090,7 +1120,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Prévisions"
+                    android:text="@string/t052"
                     android:textColor="@color/muted"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -1119,7 +1149,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Ma production"
+                    android:text="@string/t008"
                     android:textColor="@color/muted"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -1148,7 +1178,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Paramètres"
+                    android:text="@string/t016"
                     android:textColor="@color/muted"
                     android:textSize="11sp" />
             </LinearLayout>

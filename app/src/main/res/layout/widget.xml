@@ -11,7 +11,7 @@
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Aujourd'hui"
+        android:text="@string/t003"
         android:textColor="#94A3AB"
         android:textSize="12sp" />
 
@@ -25,7 +25,7 @@
             android:id="@+id/kwh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="– kWh"
+            android:text="@string/t067"
             android:textColor="#F2B632"
             android:textSize="30sp"
             android:textStyle="bold" />
@@ -59,7 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:maxLines="2"
-        android:text="Mise à jour…"
+        android:text="@string/t068"
         android:textColor="#E8EEF0"
         android:textSize="12sp" />
 

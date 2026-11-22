@@ -55,7 +55,8 @@ class HorizonView @JvmOverloads constructor(
     override fun onDraw(c: Canvas) {
         super.onDraw(c)
         for (el in listOf(0.0, 20.0, 40.0, 60.0)) c.drawLine(left, y(el), right, y(el), grid)
-        for ((az, name) in listOf(90.0 to "E", 135.0 to "SE", 180.0 to "S", 225.0 to "SO", 270.0 to "O")) {
+        val names = if (L.nl) listOf("O", "ZO", "Z", "ZW", "W") else listOf("E", "SE", "S", "SO", "O")
+        for ((az, name) in listOf(90.0, 135.0, 180.0, 225.0, 270.0).zip(names)) {
             c.drawLine(x(az), top, x(az), bottom, grid)
             c.drawText(name, x(az), height - 4f * d, label)
         }

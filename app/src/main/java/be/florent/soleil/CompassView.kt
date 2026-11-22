@@ -63,7 +63,7 @@ class CompassView @JvmOverloads constructor(
             )
         }
         p.style = Paint.Style.FILL
-        val labels = mapOf(0 to "N", 90 to "E", 180 to "S", 270 to "O")
+        val labels = if (L.nl) mapOf(0 to "N", 90 to "O", 180 to "Z", 270 to "W") else mapOf(0 to "N", 90 to "E", 180 to "S", 270 to "O")
         for (deg in 0 until 360 step 30) {
             val a = Math.toRadians(deg.toDouble() - 90)
             val rr = r - 34f * d

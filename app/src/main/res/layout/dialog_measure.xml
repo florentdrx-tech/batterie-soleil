@@ -41,7 +41,7 @@
         android:background="@drawable/pill_low"
         android:gravity="center"
         android:padding="10dp"
-        android:text="Boussole imprécise : fais quelques grands 8 en l'air avec le téléphone pour la calibrer."
+        android:text="@string/t061"
         android:textColor="@color/sun"
         android:visibility="gone" />
 
@@ -65,7 +65,7 @@
             android:layout_weight="1"
             android:background="@drawable/input_bg"
             android:stateListAnimator="@null"
-            android:text="Annuler"
+            android:text="@string/t062"
             android:textAllCaps="false"
             android:textColor="@color/fg"
             android:textSize="15sp" />
@@ -76,6 +76,6 @@
             android:layout_width="0dp"
             android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:text="Utiliser" />
+            android:text="@string/t063" />
     </LinearLayout>
 </LinearLayout>

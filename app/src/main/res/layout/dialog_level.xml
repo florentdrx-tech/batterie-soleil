@@ -9,7 +9,7 @@
 
     <TextView
         style="@style/CardTitle"
-        android:text="Niveau actuel de la batterie" />
+        android:text="@string/t057" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -53,7 +53,7 @@
         style="@style/Body"
         android:layout_marginTop="6dp"
         android:gravity="center"
-        android:text="Tape le pourcentage ou utilise le curseur" />
+        android:text="@string/t058" />
 
     <SeekBar
         android:id="@+id/lSeek"
@@ -100,7 +100,7 @@
         style="@style/Body"
         android:layout_marginTop="12dp"
         android:gravity="center"
-        android:text="Lis le pourcentage sur l'appli de ton onduleur. L'appli calcule le niveau prévu ce soir avec le soleil restant. La valeur est oubliée à minuit." />
+        android:text="@string/t059" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -116,7 +116,7 @@
             android:layout_weight="1"
             android:background="@drawable/input_bg"
             android:stateListAnimator="@null"
-            android:text="Effacer"
+            android:text="@string/t060"
             android:textAllCaps="false"
             android:textColor="@color/fg"
             android:textSize="15sp" />
@@ -127,6 +127,6 @@
             android:layout_width="0dp"
             android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:text="Enregistrer" />
+            android:text="@string/t026" />
     </LinearLayout>
 </LinearLayout>

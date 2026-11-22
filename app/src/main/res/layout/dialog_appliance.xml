@@ -19,7 +19,7 @@
         style="@style/Label"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="6dp"
-        android:text="Consommation par utilisation (kWh)" />
+        android:text="@string/t053" />
 
     <EditText
         android:id="@+id/aKwh"
@@ -30,14 +30,14 @@
     <TextView
         style="@style/Body"
         android:layout_marginTop="6dp"
-        android:text="Astuce : la consommation exacte figure sur l'étiquette énergie ou dans la notice (programme éco)." />
+        android:text="@string/t054" />
 
     <Switch
         android:id="@+id/aOn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:text="J'ai cet appareil"
+        android:text="@string/t055"
         android:textColor="@color/fg"
         android:textSize="15sp"
         android:thumbTint="@color/sun"
@@ -57,7 +57,7 @@
             android:layout_weight="1"
             android:background="@drawable/input_bg"
             android:stateListAnimator="@null"
-            android:text="Valeur moyenne"
+            android:text="@string/t056"
             android:textAllCaps="false"
             android:textColor="@color/fg"
             android:textSize="14sp" />
@@ -68,6 +68,6 @@
             android:layout_width="0dp"
             android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:text="Enregistrer" />
+            android:text="@string/t026" />
     </LinearLayout>
 </LinearLayout>

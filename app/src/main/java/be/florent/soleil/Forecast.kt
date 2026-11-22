@@ -119,18 +119,18 @@ object Forecast {
         val s = (startPct * 100).roundToInt()
         val e = (end * 100).roundToInt()
         return when {
-            end >= 0.995 -> "Batterie à $s % : pleine avant ce soir"
-            e > s + 1 -> "Batterie à $s % → ≈ $e % ce soir"
-            else -> "Batterie à $s % : pas de recharge d'ici ce soir"
+            end >= 0.995 -> L.t("Batterie à $s % : pleine avant ce soir", "Batterij op $s %: vol voor vanavond")
+            e > s + 1 -> L.t("Batterie à $s % → ≈ $e % ce soir", "Batterij op $s % → ≈ $e % vanavond")
+            else -> L.t("Batterie à $s % : pas de recharge d'ici ce soir", "Batterij op $s %: niet opgeladen voor vanavond")
         }
     }
 
     fun verdict(c: Config, kwh: Double): String {
         val surplus = max(0.0, kwh - c.conso)
         return when {
-            battPct(c, kwh) >= 1.0 -> "Batterie pleine possible, avec surplus injecté"
-            surplus > 0.5 -> "≈ %.1f kWh stockés après la conso de journée".format(surplus)
-            else -> "Production absorbée par la maison : presque rien pour la batterie"
+            battPct(c, kwh) >= 1.0 -> L.t("Batterie pleine possible, avec surplus injecté", "Batterij kan vol, met overschot naar het net")
+            surplus > 0.5 -> String.format(L.loc, L.t("≈ %.1f kWh stockés après la conso de journée", "≈ %.1f kWh opgeslagen na het dagverbruik"), surplus)
+            else -> L.t("Production absorbée par la maison : presque rien pour la batterie", "Productie gaat op aan het huis: bijna niets voor de batterij")
         }
     }
 }

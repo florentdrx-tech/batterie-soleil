@@ -21,7 +21,7 @@ object Geo {
     @Suppress("DEPRECATION")
     private fun android(ctx: Context, q: String): Place? {
         if (!Geocoder.isPresent()) return null
-        val list = Geocoder(ctx, Locale.FRENCH).getFromLocationName(q, 1)
+        val list = Geocoder(ctx, L.loc).getFromLocationName(q, 1)
         val a = list?.firstOrNull() ?: return null
         val parts = listOfNotNull(
             listOfNotNull(a.thoroughfare, a.subThoroughfare).joinToString(" ").ifBlank { null },
@@ -34,7 +34,7 @@ object Geo {
     /** Secours : OpenStreetMap (Nominatim). */
     private fun osm(q: String): Place? {
         val url = URL(
-            "https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=fr&q=" +
+            "https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=${if (L.nl) "nl" else "fr"}&q=" +
                 URLEncoder.encode(q, "UTF-8")
         )
         val c = url.openConnection() as HttpURLConnection

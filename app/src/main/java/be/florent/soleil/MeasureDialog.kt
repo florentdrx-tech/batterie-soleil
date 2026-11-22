@@ -55,11 +55,13 @@ class MeasureDialog(
         dial.tiltMode = tilt
 
         if (tilt) {
-            title.text = "Mesurer l'inclinaison"
-            hint.text = "Pose le téléphone à plat sur un panneau (ou sur la toiture), dans le sens de la pente. Attends que la valeur se stabilise."
+            title.text = L.t("Mesurer l'inclinaison", "Hellingshoek meten")
+            hint.text = L.t("Pose le téléphone à plat sur un panneau (ou sur la toiture), dans le sens de la pente. Attends que la valeur se stabilise.",
+                "Leg de telefoon plat op een paneel (of op het dak), in de richting van de helling. Wacht tot de waarde stabiel is.")
         } else {
-            title.text = "Mesurer l'orientation"
-            hint.text = "Tiens le téléphone à plat, le haut pointé dans la direction où regardent les panneaux : mets-toi dos à la toiture, ou pose-le au bas d'un panneau. Éloigne-toi des objets métalliques."
+            title.text = L.t("Mesurer l'orientation", "Oriëntatie meten")
+            hint.text = L.t("Tiens le téléphone à plat, le haut pointé dans la direction où regardent les panneaux : mets-toi dos à la toiture, ou pose-le au bas d'un panneau. Éloigne-toi des objets métalliques.",
+                "Houd de telefoon plat, met de bovenkant in de richting waarin de panelen kijken: ga met je rug naar het dak staan, of leg hem onderaan een paneel. Blijf uit de buurt van metalen voorwerpen.")
         }
 
         val c = Store.load(act)
@@ -74,8 +76,8 @@ class MeasureDialog(
 
         if (sensor == null) {
             value.text = "—"
-            sub.text = if (tilt) "Pas de capteur d'inclinaison sur ce téléphone"
-                       else "Pas de boussole sur ce téléphone"
+            sub.text = if (tilt) L.t("Pas de capteur d'inclinaison sur ce téléphone", "Geen hellingssensor op deze telefoon")
+                       else L.t("Pas de boussole sur ce téléphone", "Geen kompas op deze telefoon")
             use.isEnabled = false
             use.alpha = 0.4f
         } else {
@@ -105,7 +107,7 @@ class MeasureDialog(
                 cur = if (cur.isNaN()) raw else cur + 0.15 * (raw - cur)
                 dial.angle = cur.toFloat()
                 value.text = "${cur.roundToInt()}°"
-                sub.text = "d'inclinaison"
+                sub.text = L.t("d'inclinaison", "hellingshoek")
             }
             else -> {
                 val v = if (e.values.size > 4) e.values.copyOf(4) else e.values
@@ -132,7 +134,8 @@ class MeasureDialog(
 
     companion object {
         fun cardinal(deg: Int): String {
-            val names = listOf("nord", "nord-est", "est", "sud-est", "sud", "sud-ouest", "ouest", "nord-ouest")
+            val names = if (L.nl) listOf("noord", "noordoost", "oost", "zuidoost", "zuid", "zuidwest", "west", "noordwest")
+                else listOf("nord", "nord-est", "est", "sud-est", "sud", "sud-ouest", "ouest", "nord-ouest")
             return names[((deg + 22.5) / 45.0).toInt() % 8]
         }
     }

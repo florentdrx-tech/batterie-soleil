@@ -42,12 +42,17 @@ class ObstacleDialog(
     private var az1 = 0.0
     private var az2 = 0.0
 
-    private val steps = listOf(
+    private val steps = if (L.nl) listOf(
+        "1/3 · Richt op de LINKERRAND van het obstakel (boom, huis…), met de telefoon rechtop zoals voor een foto, en tik op Vastleggen.",
+        "2/3 · Richt nu op de RECHTERRAND van het obstakel en tik op Vastleggen.",
+        "3/3 · Richt op de TOP van het obstakel (kruin van de boom, nok van het dak) en tik op Vastleggen."
+    ) else listOf(
         "1/3 · Vise le BORD GAUCHE de l'obstacle (arbre, maison…), téléphone tenu debout comme pour une photo, puis touche Capturer.",
         "2/3 · Vise maintenant le BORD DROIT de l'obstacle, puis touche Capturer.",
         "3/3 · Vise le SOMMET de l'obstacle (la cime de l'arbre, le faîte du toit), puis touche Capturer."
     )
-    private val buttons = listOf("Capturer le bord gauche", "Capturer le bord droit", "Capturer le sommet")
+    private val buttons = if (L.nl) listOf("Linkerrand vastleggen", "Rechterrand vastleggen", "Top vastleggen")
+        else listOf("Capturer le bord gauche", "Capturer le bord droit", "Capturer le sommet")
 
     fun show() {
         dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -69,7 +74,7 @@ class ObstacleDialog(
             ?: sm.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
         if (sensor == null) {
             value.text = "—"
-            sub.text = "Ce téléphone n'a pas de boussole : relevé impossible."
+            sub.text = L.t("Ce téléphone n'a pas de boussole : relevé impossible.", "Deze telefoon heeft geen kompas: opmeten onmogelijk.")
             capture.isEnabled = false
             capture.alpha = 0.4f
         } else {
@@ -119,7 +124,7 @@ class ObstacleDialog(
         }
         val a = az.roundToInt() % 360
         value.text = "$a° ${MeasureDialog.cardinal(a)}"
-        sub.text = "hauteur ${el.roundToInt()}° au-dessus de l'horizon"
+        sub.text = L.t("hauteur ${el.roundToInt()}° au-dessus de l'horizon", "hoogte ${el.roundToInt()}° boven de horizon")
     }
 
     override fun onAccuracyChanged(s: Sensor, a: Int) {}

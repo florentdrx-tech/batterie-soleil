@@ -23,7 +23,13 @@ import kotlin.math.roundToInt
 
 class MainActivity : Activity() {
 
-    private val shortLabels = linkedMapOf(
+    private val shortLabels = if (L.nl) linkedMapOf(
+        "p1" to "Veld 1 (kWp)", "a1" to "Oriëntatie 1 (°)",
+        "p2" to "Veld 2 (kWp)", "a2" to "Oriëntatie 2 (°)",
+        "tilt" to "Hellingshoek (°)", "bat" to "Batterij (kWh)",
+        "conso" to "Dagverbruik (kWh)", "corr" to "Correctie (×)",
+        "lat" to "Breedtegraad", "lon" to "Lengtegraad"
+    ) else linkedMapOf(
         "p1" to "Champ 1 (kWc)", "a1" to "Orientation 1 (°)",
         "p2" to "Champ 2 (kWc)", "a2" to "Orientation 2 (°)",
         "tilt" to "Inclinaison (°)", "bat" to "Batterie (kWh)",
@@ -31,7 +37,7 @@ class MainActivity : Activity() {
         "lat" to "Latitude", "lon" to "Longitude"
     )
     private val fields = LinkedHashMap<String, EditText>()
-    private val fr = Locale.FRENCH
+    private val fr get() = L.loc
 
     private lateinit var subtitle: TextView
     private lateinit var kwh: TextView
@@ -205,6 +211,7 @@ class MainActivity : Activity() {
         val hp = findViewById<EditText>(R.id.tarHp); val hc = findViewById<EditText>(R.id.tarHc)
         val mp = findViewById<EditText>(R.id.tarMonoPrice); val inj = findViewById<EditText>(R.id.tarInj)
         val out = findViewById<TextView>(R.id.tarOut)
+        val capa = findViewById<android.widget.CheckBox>(R.id.tarCapa)
 
         fun hr(v: Int) = if (v < 0) "" else v.toString()
         fun price(v: Double) = String.format(fr, "%.2f", v)
@@ -215,6 +222,7 @@ class MainActivity : Activity() {
             r1s.setText(hr(t.r1s)); r1e.setText(hr(t.r1e)); r2s.setText(hr(t.r2s)); r2e.setText(hr(t.r2e))
             we.isChecked = t.weekend
             hp.setText(price(t.hp)); hc.setText(price(t.hc)); mp.setText(price(t.mono)); inj.setText(price(t.inj))
+            capa.isChecked = t.capa
         }
         fill(Tariffs.load(this))
 
@@ -227,20 +235,22 @@ class MainActivity : Activity() {
             r1s.setText(hr(p.r1s)); r1e.setText(hr(p.r1e)); r2s.setText(hr(p.r2s)); r2e.setText(hr(p.r2e))
             we.isChecked = p.weekend
         }
-        findViewById<View>(R.id.tarPresetWal).setOnClickListener { preset(Tariffs.WALLONIE) }
-        findViewById<View>(R.id.tarPresetClassic).setOnClickListener { preset(Tariffs.CLASSIQUE) }
+        findViewById<View>(R.id.tarPresetWal).setOnClickListener { preset(Tariffs.WALLONIE); capa.isChecked = false }
+        findViewById<View>(R.id.tarPresetClassic).setOnClickListener { preset(Tariffs.CLASSIQUE); capa.isChecked = true }
+        findViewById<View>(R.id.tarPresetFl21).setOnClickListener { preset(Tariffs.FLANDRE_21); capa.isChecked = true }
 
         findViewById<Button>(R.id.tarSave).setOnClickListener {
             fun h(e: EditText): Int = e.text.toString().trim().toIntOrNull()?.takeIf { it in 0..24 }?.let { it % 24 } ?: -1
             val d = Tariffs.load(this)
             val t = Tariff(
                 bi.isChecked, h(r1s), h(r1e), h(r2s), h(r2e), we.isChecked,
-                num(hp) ?: d.hp, num(hc) ?: d.hc, num(mp) ?: d.mono, num(inj) ?: d.inj
+                num(hp) ?: d.hp, num(hc) ?: d.hc, num(mp) ?: d.mono, num(inj) ?: d.inj,
+                capa.isChecked
             )
             Tariffs.save(this, t)
             fill(t)
             out.visibility = View.VISIBLE
-            out.text = "✓ Tarif enregistré : les coûts et les conseils sont recalculés."
+            out.text = L.t("✓ Tarif enregistré : les coûts et les conseils sont recalculés.", "✓ Tarief opgeslagen: kosten en adviezen worden herberekend.")
             show()
             SolarWidget.refreshAll(this)
         }
@@ -283,7 +293,7 @@ class MainActivity : Activity() {
     override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) {
         super.onRequestPermissionsResult(code, perms, results)
         if (code == 7 && results.isNotEmpty() && results[0] != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            status.text = "Notifications refusées : active-les dans les réglages Android pour recevoir les rappels."
+            status.text = L.t("Notifications refusées : active-les dans les réglages Android pour recevoir les rappels.", "Meldingen geweigerd: zet ze aan in de Android-instellingen om herinneringen te krijgen.")
         }
     }
 
@@ -348,7 +358,7 @@ class MainActivity : Activity() {
                         textSize = 20f
                         gravity = android.view.Gravity.CENTER
                         setBackgroundResource(R.drawable.round_btn)
-                        contentDescription = if (key == "tilt") "Mesurer l'inclinaison" else "Mesurer l'orientation"
+                        contentDescription = if (key == "tilt") L.t("Mesurer l'inclinaison", "Hellingshoek meten") else L.t("Mesurer l'orientation", "Oriëntatie meten")
                         setOnClickListener {
                             MeasureDialog(this@MainActivity, key == "tilt") { v -> applyMeasure(key, v) }.show()
                         }
@@ -368,12 +378,12 @@ class MainActivity : Activity() {
     private fun fillFields() {
         val c = Store.load(this)
         fields.forEach { (k, e) -> e.setText(fmtField(c.m.getValue(k))) }
-        subtitle.text = "${place(c)} · ${f1(c.p1 + c.p2)} kWc · batterie ${f1(c.bat)} kWh"
+        subtitle.text = L.t("${place(c)} · ${f1(c.p1 + c.p2)} kWc · batterie ${f1(c.bat)} kWh", "${place(c)} · ${f1(c.p1 + c.p2)} kWp · batterij ${f1(c.bat)} kWh")
         placeOut.text = "📍 ${place(c)} (${String.format(fr, "%.4f, %.4f", c.lat, c.lon)})"
         renderCalibs()
         renderShade()
         renderDiag()
-        settingsSummary.text = "${f1(c.p1)} kWc à ${c.a1.roundToInt()}° + ${f1(c.p2)} kWc à ${c.a2.roundToInt()}°"
+        settingsSummary.text = L.t("${f1(c.p1)} kWc à ${c.a1.roundToInt()}° + ${f1(c.p2)} kWc à ${c.a2.roundToInt()}°", "${f1(c.p1)} kWp op ${c.a1.roundToInt()}° + ${f1(c.p2)} kWp op ${c.a2.roundToInt()}°")
     }
 
     // ---------- Affichage ----------
@@ -386,9 +396,9 @@ class MainActivity : Activity() {
 
         if (fut.isEmpty()) {
             kwh.text = "–"
-            meta.text = "En attente des prévisions"
+            meta.text = L.t("En attente des prévisions", "Wachten op de voorspelling")
             battery.setLevel(0f)
-            verdict.text = "Touche ↻ pour charger la météo (internet requis)"
+            verdict.text = L.t("Touche ↻ pour charger la météo (internet requis)", "Tik op ↻ om het weer te laden (internet nodig)")
             verdict.setBackgroundResource(R.drawable.pill_low)
             verdict.setTextColor(getColor(R.color.sun))
             status.text = ""
@@ -401,19 +411,19 @@ class MainActivity : Activity() {
         val k = Forecast.est(c, t)
         val p = Forecast.battPct(c, k)
         kwh.text = f1(k)
-        meta.text = "${sky(t)}  ${f1(t.sun)} h de soleil · ${t.cloud.roundToInt()} % de nuages"
+        meta.text = L.t("${sky(t)}  ${f1(t.sun)} h de soleil · ${t.cloud.roundToInt()} % de nuages", "${sky(t)}  ${f1(t.sun)} u zon · ${t.cloud.roundToInt()} % bewolking")
         val lvl = Store.level(this)
         val end = lvl?.let { Forecast.endLevel(c, t, it.first / 100.0, it.second) }
         val good: Boolean
         if (lvl != null && end != null) {
             val start = lvl.first / 100.0
             battery.setLevel(end.toFloat())
-            batteryLabel.text = "ce soir · ✎"
+            batteryLabel.text = L.t("ce soir · ✎", "vanavond · ✎")
             verdict.text = Forecast.levelVerdict(start, end)
             good = end > start + 0.01 || end >= 0.995
         } else {
             battery.setLevel(p.toFloat())
-            batteryLabel.text = "✎ Régler"
+            batteryLabel.text = L.t("✎ Régler", "✎ Instellen")
             verdict.text = Forecast.verdict(c, k)
             good = k - c.conso > 0.5
         }
@@ -437,8 +447,8 @@ class MainActivity : Activity() {
             val bp = (Forecast.battPct(c, e) * 100).roundToInt()
 
             val name = when (i) {
-                0 -> "Auj."
-                1 -> "Demain"
+                0 -> L.t("Auj.", "Vand.")
+                1 -> L.t("Demain", "Morgen")
                 else -> date.format(dayFmt).trimEnd('.').replaceFirstChar { it.uppercase() }
             }
             row.findViewById<TextView>(R.id.dName).apply {
@@ -448,7 +458,7 @@ class MainActivity : Activity() {
             row.findViewById<TextView>(R.id.dDate).text = date.format(dateFmt)
             row.findViewById<TextView>(R.id.dSky).text = sky(d)
             row.findViewById<ProgressBar>(R.id.dBar).progress = ((e / max) * 1000).roundToInt()
-            row.findViewById<TextView>(R.id.dMeta).text = "${f1(d.sun)} h de soleil"
+            row.findViewById<TextView>(R.id.dMeta).text = L.t("${f1(d.sun)} h de soleil", "${f1(d.sun)} u zon")
             row.findViewById<TextView>(R.id.dKwh).text = f1(e)
             row.findViewById<TextView>(R.id.dBatt).apply {
                 text = "🔋 $bp %"
@@ -457,7 +467,7 @@ class MainActivity : Activity() {
             days.addView(row)
         }
 
-        status.text = "Mis à jour à ${Store.updatedAt(this)} · correction ×${String.format(fr, "%.2f", Forecast.factorFor(c, today))}"
+        status.text = L.t("Mis à jour à ", "Bijgewerkt om ") + Store.updatedAt(this) + L.t(" · correction ×", " · correctie ×") + String.format(fr, "%.2f", Forecast.factorFor(c, today))
         val h = Appliances.headline(c, Tariffs.load(this), fut, Appliances.all(this))
         tip.visibility = if (h == null) View.GONE else View.VISIBLE
         tip.text = "💡 ${h ?: ""}"
@@ -467,7 +477,7 @@ class MainActivity : Activity() {
     // ---------- Actions ----------
 
     private fun refresh() {
-        status.text = "Chargement des prévisions…"
+        status.text = L.t("Chargement des prévisions…", "Voorspelling laden…")
         refreshBtn.animate().rotationBy(360f).setDuration(700).start()
         val act = this
         Thread {
@@ -477,7 +487,7 @@ class MainActivity : Activity() {
             }
             runOnUiThread {
                 if (r.isFailure) {
-                    status.text = "Météo indisponible. Vérifie la connexion internet."
+                    status.text = L.t("Météo indisponible. Vérifie la connexion internet.", "Weer niet beschikbaar. Controleer de internetverbinding.")
                 } else {
                     fillFields()
                     show()
@@ -490,23 +500,23 @@ class MainActivity : Activity() {
     private fun findAddress() {
         val q = address.text.toString().trim()
         if (q.isEmpty()) {
-            placeOut.text = "Entre une adresse ou une commune."
+            placeOut.text = L.t("Entre une adresse ou une commune.", "Geef een adres of gemeente in.")
             return
         }
         (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
             .hideSoftInputFromWindow(address.windowToken, 0)
-        placeOut.text = "Recherche de l'adresse…"
+        placeOut.text = L.t("Recherche de l'adresse…", "Adres zoeken…")
         val act = this
         Thread {
             val p = Geo.find(act, q)
             runOnUiThread {
                 if (p == null) {
-                    placeOut.text = "Adresse introuvable. Essaie avec la commune et le code postal."
+                    placeOut.text = L.t("Adresse introuvable. Essaie avec la commune et le code postal.", "Adres niet gevonden. Probeer met de gemeente en de postcode.")
                 } else {
                     Store.setPlace(act, p)
                     address.setText("")
                     fillFields()
-                    placeOut.text = "📍 ${p.name} — enregistré (${String.format(fr, "%.4f, %.4f", p.lat, p.lon)})"
+                    placeOut.text = "📍 ${p.name} — " + L.t("enregistré", "opgeslagen") + " (${String.format(fr, "%.4f, %.4f", p.lat, p.lon)})"
                     refresh()
                 }
             }
@@ -516,8 +526,8 @@ class MainActivity : Activity() {
     // ---------- Que lancer ? ----------
 
     private fun dayLabel(i: Int, date: String): String = when (i) {
-        0 -> "Aujourd'hui"
-        1 -> "Demain"
+        0 -> L.t("Aujourd'hui", "Vandaag")
+        1 -> L.t("Demain", "Morgen")
         else -> LocalDate.parse(date).format(DateTimeFormatter.ofPattern("EEE d", fr))
             .replace(".", "").replaceFirstChar { it.uppercase() }
     }
@@ -530,7 +540,7 @@ class MainActivity : Activity() {
         appDays.removeAllViews()
         appList.removeAllViews()
         if (fut.isEmpty()) {
-            appSummary.text = "Les conseils apparaîtront une fois la météo chargée."
+            appSummary.text = L.t("Les conseils apparaîtront une fois la météo chargée.", "De adviezen verschijnen zodra het weer geladen is.")
             appManage.visibility = View.GONE
             return
         }
@@ -558,26 +568,27 @@ class MainActivity : Activity() {
         val combo = Appliances.combo(c, d, all)
         val win = Appliances.bestWindow(c, d)
         val sb = StringBuilder()
-        sb.append("☀ Surplus solaire prévu : ${f1(surplus)} kWh (après ${f1(c.conso)} kWh de conso habituelle)")
+        sb.append(L.t("☀ Surplus solaire prévu : ${f1(surplus)} kWh (après ${f1(c.conso)} kWh de conso habituelle)", "☀ Verwacht zonne-overschot: ${f1(surplus)} kWh (na ${f1(c.conso)} kWh gewoon verbruik)"))
         if (win != null && surplus > 0.2) {
-            sb.append("\n🕐 Meilleur moment : ${win.first} h – ${win.first + 2} h")
+            sb.append(L.t("\n🕐 Meilleur moment : ${win.first} h – ${win.first + 2} h", "\n🕐 Beste moment: ${win.first}u – ${win.first + 2}u"))
         }
         sb.append(
-            if (combo.isEmpty()) "\nPas assez de soleil pour lancer un gros appareil sans tirer sur le réseau ou la batterie."
-            else "\nDe quoi faire tourner : " + combo.joinToString(", ") { it.name }
+            if (combo.isEmpty()) L.t("\nPas assez de soleil pour lancer un gros appareil sans tirer sur le réseau ou la batterie.", "\nNiet genoeg zon om een groot toestel te laten draaien zonder net of batterij.")
+            else L.t("\nDe quoi faire tourner : ", "\nGenoeg voor: ") + combo.joinToString(", ") { it.name } +
+                (if (Tariffs.load(this).capa && combo.size > 1) L.t("\n⚡ Tarif capacitaire : lance-les l'un après l'autre pour ne pas augmenter ton pic mensuel.", "\n⚡ Capaciteitstarief: zet ze na elkaar aan om je maandpiek niet te verhogen.") else "")
         )
         appSummary.text = sb.toString()
 
         if (manageAll) {
-            appManage.text = "Terminé ▴"
-            appSummary.text = "Touche un appareil pour l'activer ou modifier sa consommation."
+            appManage.text = L.t("Terminé ▴", "Klaar ▴")
+            appSummary.text = L.t("Touche un appareil pour l'activer ou modifier sa consommation.", "Tik op een toestel om het aan te zetten of het verbruik te wijzigen.")
             all.forEach { addApplianceRow(it, null, fut, dp) }
         } else {
-            appManage.text = "Gérer mes appareils ▾"
+            appManage.text = L.t("Gérer mes appareils ▾", "Mijn toestellen beheren ▾")
             val recos = Appliances.advise(c, Tariffs.load(this), fut, appDay, all)
             if (recos.isEmpty()) {
                 appList.addView(TextView(this).apply {
-                    text = "Aucun appareil sélectionné."
+                    text = L.t("Aucun appareil sélectionné.", "Geen toestel geselecteerd.")
                     setTextColor(getColor(R.color.muted)); textSize = 13f
                     setPadding(0, (10 * dp).toInt(), 0, 0)
                 })
@@ -612,15 +623,15 @@ class MainActivity : Activity() {
             detail.append("\n")
             when {
                 r.advice == Advice.YES -> detail.append("☀ $slot")
-                r.planOffPeak -> detail.append("🌙 Heures creuses $slot")
-                r.betterDay != null -> detail.append("☀ Mieux $slot")
-                r.advice == Advice.LATER -> detail.append("Pas de bon jour d'ici 4 jours")
-                else -> detail.append("≈ ${(r.coverage * 100).roundToInt()} % solaire, $slot")
+                r.planOffPeak -> detail.append(L.t("🌙 Heures creuses $slot", "🌙 Daluren $slot"))
+                r.betterDay != null -> detail.append(L.t("☀ Mieux $slot", "☀ Beter $slot"))
+                r.advice == Advice.LATER -> detail.append(L.t("Pas de bon jour d'ici 4 jours", "Geen goede dag binnen 4 dagen"))
+                else -> detail.append(L.t("≈ ${(r.coverage * 100).roundToInt()} % solaire, $slot", "≈ ${(r.coverage * 100).roundToInt()} % zon, $slot"))
             }
             detail.append(" · ≈ ${eur(r.cost)}")
-            if (r.costPeak - r.cost > 0.05) detail.append(" au lieu de ${eur(r.costPeak)}")
+            if (r.costPeak - r.cost > 0.05) detail.append(L.t(" au lieu de ", " in plaats van ") + eur(r.costPeak))
         }
-        if (r == null) detail.append(if (app.on) " · activé" else " · désactivé")
+        if (r == null) detail.append(if (app.on) L.t(" · activé", " · aan") else L.t(" · désactivé", " · uit"))
         texts.addView(TextView(this).apply {
             text = detail; setTextColor(getColor(R.color.muted)); textSize = 12f
         })
@@ -628,11 +639,11 @@ class MainActivity : Activity() {
 
         if (r != null) {
             val (label, bg, col) = when (r.advice) {
-                Advice.YES -> Triple("✓ Oui", R.drawable.pill_good, R.color.batt)
-                Advice.PARTIAL -> Triple("En partie", R.drawable.pill_low, R.color.sun)
-                Advice.LATER -> if (r.betterDay != null) Triple("À reporter", R.drawable.pill_bad, R.color.bad)
-                    else Triple("Peu de soleil", R.drawable.pill_bad, R.color.bad)
-                Advice.OFFPEAK -> Triple("Heures creuses", R.drawable.pill_night, R.color.night)
+                Advice.YES -> Triple(L.t("✓ Oui", "✓ Ja"), R.drawable.pill_good, R.color.batt)
+                Advice.PARTIAL -> Triple(L.t("En partie", "Gedeeltelijk"), R.drawable.pill_low, R.color.sun)
+                Advice.LATER -> if (r.betterDay != null) Triple(L.t("À reporter", "Uitstellen"), R.drawable.pill_bad, R.color.bad)
+                    else Triple(L.t("Peu de soleil", "Weinig zon"), R.drawable.pill_bad, R.color.bad)
+                Advice.OFFPEAK -> Triple(L.t("Heures creuses", "Daluren"), R.drawable.pill_night, R.color.night)
             }
             row.addView(TextView(this).apply {
                 text = label; textSize = 12f
@@ -659,7 +670,7 @@ class MainActivity : Activity() {
         val def = Appliances.default(app.id)
         dlg.findViewById<TextView>(R.id.aTitle).text = "${app.emoji}  ${app.name}"
         dlg.findViewById<TextView>(R.id.aInfo).text =
-            "Puissance typique ${f1(app.kw)} kW · valeur moyenne ${f1(def?.kwh ?: app.kwh)} kWh par utilisation"
+            L.t("Puissance typique ${f1(app.kw)} kW · valeur moyenne ${f1(def?.kwh ?: app.kwh)} kWh par utilisation", "Typisch vermogen ${f1(app.kw)} kW · gemiddeld ${f1(def?.kwh ?: app.kwh)} kWh per gebruik")
         val kwhField = dlg.findViewById<EditText>(R.id.aKwh)
         kwhField.setText(fmtField(app.kwh))
         val sw = dlg.findViewById<android.widget.Switch>(R.id.aOn)
@@ -691,7 +702,7 @@ class MainActivity : Activity() {
         horizon.set(c.lat, c.lon, obs)
         obsList.removeAllViews()
         if (obs.isEmpty()) {
-            shadeImpact.text = "Aucun obstacle encodé : l'appli considère que rien ne fait d'ombre à tes panneaux."
+            shadeImpact.text = L.t("Aucun obstacle encodé : l'appli considère que rien ne fait d'ombre à tes panneaux.", "Geen obstakels ingegeven: de app gaat ervan uit dat niets schaduw op je panelen werpt.")
             return
         }
         val y = LocalDate.now().year
@@ -699,10 +710,10 @@ class MainActivity : Activity() {
         val today = LocalDate.now().toString()
         val raw = Store.days(this, false).find { it.date == today }
         val sh = Store.days(this).find { it.date == today }
-        val sb = StringBuilder("Soleil direct perdu par ciel clair :\n21 déc. −${pct(12, 21)} %  ·  21 mars −${pct(3, 20)} %  ·  21 juin −${pct(6, 21)} %")
+        val sb = StringBuilder(L.t("Soleil direct perdu par ciel clair :\n21 déc. −${pct(12, 21)} %  ·  21 mars −${pct(3, 20)} %  ·  21 juin −${pct(6, 21)} %", "Verloren directe zon bij heldere hemel:\n21 dec. −${pct(12, 21)} %  ·  21 maart −${pct(3, 20)} %  ·  21 juni −${pct(6, 21)} %"))
         if (raw != null && sh != null) {
             val lost = Forecast.est(c, raw) - Forecast.est(c, sh)
-            if (lost > 0.05) sb.append("\nAujourd'hui : −${f1(lost)} kWh sur la prévision.")
+            if (lost > 0.05) sb.append(L.t("\nAujourd'hui : −${f1(lost)} kWh sur la prévision.", "\nVandaag: −${f1(lost)} kWh op de voorspelling."))
         }
         shadeImpact.text = sb.toString()
 
@@ -722,12 +733,12 @@ class MainActivity : Activity() {
             val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             val mid = ((o.az1 + Shading.span(o) / 2) % 360).roundToInt()
             texts.addView(TextView(this).apply {
-                text = (if (o.leafy) "Arbre (feuilles caduques)" else "Bâtiment ou arbre persistant") +
+                text = (if (o.leafy) L.t("Arbre (feuilles caduques)", "Loofboom") else L.t("Bâtiment ou arbre persistant", "Gebouw of groenblijvende boom")) +
                     " · ${MeasureDialog.cardinal(mid)}"
                 setTextColor(getColor(R.color.fg)); textSize = 14f
             })
             texts.addView(TextView(this).apply {
-                text = "De ${o.az1.roundToInt()}° à ${o.az2.roundToInt()}° · hauteur ${o.el.roundToInt()}°"
+                text = L.t("De ${o.az1.roundToInt()}° à ${o.az2.roundToInt()}° · hauteur ${o.el.roundToInt()}°", "Van ${o.az1.roundToInt()}° tot ${o.az2.roundToInt()}° · hoogte ${o.el.roundToInt()}°")
                 setTextColor(getColor(R.color.muted)); textSize = 12f
             })
             row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
@@ -735,7 +746,7 @@ class MainActivity : Activity() {
                 text = "✕"; textSize = 16f; gravity = android.view.Gravity.CENTER
                 setTextColor(getColor(R.color.muted))
                 setBackgroundResource(R.drawable.round_btn)
-                contentDescription = "Supprimer cet obstacle"
+                contentDescription = L.t("Supprimer cet obstacle", "Obstakel verwijderen")
                 setOnClickListener {
                     Store.saveObstacles(this@MainActivity, Store.obstacles(this@MainActivity).filterIndexed { k, _ -> k != i })
                     afterShadeChange()
@@ -762,16 +773,17 @@ class MainActivity : Activity() {
 
         val (fNow, nSeason) = Forecast.seasonInfo(c, today)
         diagSeason.text = when {
-            nSeason > 0 -> "Correction appliquée en ce moment : ×${String.format(fr, "%.2f", fNow)}, calculée sur $nSeason jour${if (nSeason > 1) "s" else ""} de la même saison (±45 jours)."
-            c.calibs.isNotEmpty() -> "Correction appliquée : ×${String.format(fr, "%.2f", fNow)}, moyenne de tous tes jours. Encode au moins ${Store.SEASON_MIN} jours dans la saison en cours pour une correction propre à la saison."
+            nSeason > 0 -> if (L.nl) "Huidige correctie: ×${String.format(fr, "%.2f", fNow)}, berekend op $nSeason ${if (nSeason > 1) "dagen" else "dag"} uit hetzelfde seizoen (±45 dagen)."
+                else "Correction appliquée en ce moment : ×${String.format(fr, "%.2f", fNow)}, calculée sur $nSeason jour${if (nSeason > 1) "s" else ""} de la même saison (±45 jours)."
+            c.calibs.isNotEmpty() -> L.t("Correction appliquée : ×${String.format(fr, "%.2f", fNow)}, moyenne de tous tes jours. Encode au moins ${Store.SEASON_MIN} jours dans la saison en cours pour une correction propre à la saison.", "Toegepaste correctie: ×${String.format(fr, "%.2f", fNow)}, gemiddelde van al je dagen. Geef minstens ${Store.SEASON_MIN} dagen in dit seizoen in voor een seizoenscorrectie.")
             else -> ""
         }
 
         if (list.isEmpty() || kwc <= 0) {
             diagStatus.setBackgroundResource(R.drawable.pill_low)
             diagStatus.setTextColor(getColor(R.color.sun))
-            diagStatus.text = "Pas encore de diagnostic"
-            diagText.text = "Encode ta production réelle pendant quelques jours : l'appli comparera avec ce qu'elle attendait et cherchera les causes d'un écart."
+            diagStatus.text = L.t("Pas encore de diagnostic", "Nog geen diagnose")
+            diagText.text = L.t("Encode ta production réelle pendant quelques jours : l'appli comparera avec ce qu'elle attendait et cherchera les causes d'un écart.", "Geef enkele dagen je werkelijke productie in: de app vergelijkt met wat ze verwachtte en zoekt de oorzaken van een verschil.")
             return
         }
 
@@ -779,21 +791,24 @@ class MainActivity : Activity() {
         val n = list.size
         val realKwc = list.sumOf { it.real } / n / kwc
         val expKwc = list.sumOf { it.base } / n / kwc
-        diagText.text = "Sur tes $n dernier${if (n > 1) "s" else ""} jour${if (n > 1) "s" else ""} encodé${if (n > 1) "s" else ""} : " +
+        diagText.text = if (L.nl) "Over je laatste $n ingegeven ${if (n > 1) "dagen" else "dag"}: " +
+            "gemiddeld ${String.format(fr, "%.2f", realKwc)} kWh per geïnstalleerde kWp, voor ${String.format(fr, "%.2f", expKwc)} verwacht, " +
+            "of ${(r * 100).roundToInt()} % van de voorspelling."
+        else "Sur tes $n dernier${if (n > 1) "s" else ""} jour${if (n > 1) "s" else ""} encodé${if (n > 1) "s" else ""} : " +
             "${String.format(fr, "%.2f", realKwc)} kWh par kWc installé en moyenne, pour ${String.format(fr, "%.2f", expKwc)} attendus, " +
             "soit ${(r * 100).roundToInt()} % de la prévision."
         when {
             r >= 0.9 -> {
                 diagStatus.setBackgroundResource(R.drawable.pill_good); diagStatus.setTextColor(getColor(R.color.batt))
-                diagStatus.text = "✓ Production conforme aux prévisions"
+                diagStatus.text = L.t("✓ Production conforme aux prévisions", "✓ Productie volgens verwachting")
             }
             r >= 0.7 -> {
                 diagStatus.setBackgroundResource(R.drawable.pill_low); diagStatus.setTextColor(getColor(R.color.sun))
-                diagStatus.text = "Un peu en dessous des prévisions"
+                diagStatus.text = L.t("Un peu en dessous des prévisions", "Iets onder de verwachting")
             }
             else -> {
                 diagStatus.setBackgroundResource(R.drawable.pill_bad); diagStatus.setTextColor(getColor(R.color.bad))
-                diagStatus.text = "Nettement en dessous des prévisions"
+                diagStatus.text = L.t("Nettement en dessous des prévisions", "Duidelijk onder de verwachting")
             }
         }
 
@@ -804,49 +819,50 @@ class MainActivity : Activity() {
             val rr = ratio(list.take(3)); val ro = ratio(list.drop(3))
             if (ro > 0 && rr < ro * 0.75) {
                 drop = ((1 - rr / ro) * 100).roundToInt()
-                tips.add(Triple("📉", "Baisse récente de $drop %",
-                    "Tes 3 derniers jours sont nettement sous les précédents. Une baisse brutale vient rarement de la saleté : regarde d'abord l'écran ou l'appli de l'onduleur (message d'erreur, chaîne de panneaux à zéro)."))
+                tips.add(Triple("📉", L.t("Baisse récente de $drop %", "Recente daling van $drop %"),
+                    L.t("Tes 3 derniers jours sont nettement sous les précédents. Une baisse brutale vient rarement de la saleté : regarde d'abord l'écran ou l'appli de l'onduleur (message d'erreur, chaîne de panneaux à zéro).", "Je laatste 3 dagen liggen duidelijk lager dan de vorige. Een plotse daling komt zelden door vuil: kijk eerst op het scherm of in de app van de omvormer (foutmelding, string op nul).")))
             }
         }
         if (r > 1.2) {
-            tips.add(Triple("🔎", "Vérifie tes réglages",
-                "Tu produis plus que prévu : la puissance (kWc), l'orientation ou l'inclinaison encodées dans Paramètres sont peut-être sous-estimées."))
+            tips.add(Triple("🔎", L.t("Vérifie tes réglages", "Controleer je instellingen"),
+                L.t("Tu produis plus que prévu : la puissance (kWc), l'orientation ou l'inclinaison encodées dans Paramètres sont peut-être sous-estimées.", "Je produceert meer dan verwacht: het vermogen (kWp), de oriëntatie of de hellingshoek in Instellingen zijn misschien te laag ingeschat.")))
         }
         if (r < 0.9) {
             val obs = Store.obstacles(this)
-            tips.add(Triple("🧽", "Nettoie les panneaux",
-                (if (c.tilt < 15) "Avec une inclinaison faible (${c.tilt.roundToInt()}°), la pluie nettoie mal et la saleté s'accumule. " else
-                    "Pollen, fientes, mousse ou poussière d'un champ ou d'une route peuvent faire perdre 5 à 15 %. ") +
-                "Utilise de l'eau claire (idéalement déminéralisée) et une brosse douce ou une raclette à manche télescopique, tôt le matin ou le soir quand les panneaux sont froids. " +
-                "Pas de nettoyeur haute pression ni de détergent. Ne monte pas sur le toit : si l'accès est risqué, fais appel à un professionnel. " +
-                "Encode ensuite quelques jours pour comparer avant et après."))
-            tips.add(Triple("🌳", if (obs.isEmpty()) "Relève les ombres" else "Complète les ombres",
-                if (obs.isEmpty()) "Aucun obstacle n'est encodé. En hiver, le soleil est bas : un arbre ou une maison voisine peut couper une grande partie de la production. Relève-les dans Paramètres › Ombres. Si l'arbre est chez toi, un élagage peut faire gagner beaucoup."
+            tips.add(Triple("🧽", L.t("Nettoie les panneaux", "Reinig de panelen"),
+                (if (c.tilt < 15) L.t("Avec une inclinaison faible (${c.tilt.roundToInt()}°), la pluie nettoie mal et la saleté s'accumule. ", "Bij een kleine hellingshoek (${c.tilt.roundToInt()}°) spoelt regen slecht en hoopt vuil zich op. ") else
+                    L.t("Pollen, fientes, mousse ou poussière d'un champ ou d'une route peuvent faire perdre 5 à 15 %. ", "Stuifmeel, vogelpoep, mos of stof van een veld of weg kunnen 5 tot 15 % kosten. ")) +
+                L.t("Utilise de l'eau claire (idéalement déminéralisée) et une brosse douce ou une raclette à manche télescopique, tôt le matin ou le soir quand les panneaux sont froids. ", "Gebruik zuiver water (liefst gedemineraliseerd) en een zachte borstel of een trekker met telescoopsteel, vroeg in de ochtend of 's avonds als de panelen koel zijn. ") +
+                L.t("Pas de nettoyeur haute pression ni de détergent. Ne monte pas sur le toit : si l'accès est risqué, fais appel à un professionnel. ", "Geen hogedrukreiniger of zeep. Klim niet op het dak: is het onveilig, doe dan een beroep op een vakman. ") +
+                L.t("Encode ensuite quelques jours pour comparer avant et après.", "Geef daarna enkele dagen in om voor en na te vergelijken.")))
+            tips.add(Triple("🌳", if (obs.isEmpty()) L.t("Relève les ombres", "Meet de schaduw op") else L.t("Complète les ombres", "Vul de schaduw aan"),
+                if (obs.isEmpty()) L.t("Aucun obstacle n'est encodé. En hiver, le soleil est bas : un arbre ou une maison voisine peut couper une grande partie de la production. Relève-les dans Paramètres › Ombres. Si l'arbre est chez toi, un élagage peut faire gagner beaucoup.", "Er zijn geen obstakels ingegeven. In de winter staat de zon laag: een boom of een buurhuis kan een groot deel van de productie wegnemen. Meet ze op in Instellingen › Schaduw. Staat de boom bij jou, dan kan snoeien veel opleveren.")
+                else if (L.nl) "${obs.size} ${if (obs.size > 1) "obstakels" else "obstakel"} meegerekend. Ontbreekt er een (schoorsteen, antenne, haag, buurhuis), voeg het toe. Werpt een boom bij jou schaduw, dan kan snoeien veel opleveren."
                 else "${obs.size} obstacle${if (obs.size > 1) "s" else ""} pris en compte. S'il en manque (cheminée, antenne, haie, maison voisine), ajoute-les. Si un arbre chez toi fait de l'ombre, un élagage peut faire gagner beaucoup."))
-            tips.add(Triple("⚡", "Contrôle l'onduleur",
-                "Regarde la production par chaîne ou par panneau dans l'appli de l'onduleur. Si une chaîne produit beaucoup moins que l'autre par grand soleil, un câble, un connecteur ou un optimiseur est peut-être en défaut : contacte ton installateur, c'est souvent sous garantie."))
-            tips.add(Triple("🧭", "Vérifie l'orientation et l'inclinaison",
-                "Mesure-les avec la boussole 🧭 et l'inclinomètre 📐 dans Paramètres. Une erreur de 90° fausse fortement la prévision."))
-            tips.add(Triple("🔋", "Batterie pleine et injection bridée",
-                "Si ton onduleur limite l'injection sur le réseau, il réduit la production dès que la batterie est pleine. Encode plutôt des jours où la batterie n'était pas pleine."))
+            tips.add(Triple("⚡", L.t("Contrôle l'onduleur", "Controleer de omvormer"),
+                L.t("Regarde la production par chaîne ou par panneau dans l'appli de l'onduleur. Si une chaîne produit beaucoup moins que l'autre par grand soleil, un câble, un connecteur ou un optimiseur est peut-être en défaut : contacte ton installateur, c'est souvent sous garantie.", "Bekijk de productie per string of per paneel in de app van de omvormer. Produceert een string bij volle zon veel minder dan de andere, dan is misschien een kabel, connector of optimizer defect: contacteer je installateur, vaak valt dit onder garantie.")))
+            tips.add(Triple("🧭", L.t("Vérifie l'orientation et l'inclinaison", "Controleer oriëntatie en hellingshoek"),
+                L.t("Mesure-les avec la boussole 🧭 et l'inclinomètre 📐 dans Paramètres. Une erreur de 90° fausse fortement la prévision.", "Meet ze met het kompas 🧭 en de hellingsmeter 📐 in Instellingen. Een fout van 90° vertekent de voorspelling sterk.")))
+            tips.add(Triple("🔋", L.t("Batterie pleine et injection bridée", "Volle batterij en beperkte injectie"),
+                L.t("Si ton onduleur limite l'injection sur le réseau, il réduit la production dès que la batterie est pleine. Encode plutôt des jours où la batterie n'était pas pleine.", "Als je omvormer de injectie op het net beperkt, verlaagt hij de productie zodra de batterij vol is. Geef liever dagen in waarop de batterij niet vol was.")))
             if (LocalDate.now().monthValue in listOf(11, 12, 1, 2, 3)) {
-                tips.add(Triple("❄️", "Givre ou neige",
-                    "En hiver, les panneaux peuvent rester couverts une partie de la matinée. Ne les gratte pas et n'y verse pas d'eau chaude : attends que ça fonde."))
+                tips.add(Triple("❄️", L.t("Givre ou neige", "Rijp of sneeuw"),
+                    L.t("En hiver, les panneaux peuvent rester couverts une partie de la matinée. Ne les gratte pas et n'y verse pas d'eau chaude : attends que ça fonde.", "In de winter kunnen de panelen een deel van de ochtend bedekt blijven. Krab ze niet en giet er geen warm water op: wacht tot het smelt.")))
             }
             if (r < 0.7) {
-                tips.add(Triple("🛠️", "Fais contrôler l'installation",
-                    "Si rien de tout ça n'explique l'écart, ton installateur peut mesurer chaque chaîne ou faire une thermographie pour repérer un panneau défectueux."))
+                tips.add(Triple("🛠️", L.t("Fais contrôler l'installation", "Laat de installatie nakijken"),
+                    L.t("Si rien de tout ça n'explique l'écart, ton installateur peut mesurer chaque chaîne ou faire une thermographie pour repérer un panneau défectueux.", "Verklaart niets hiervan het verschil, dan kan je installateur elke string meten of een thermografie doen om een defect paneel op te sporen.")))
             }
         } else if (tips.isEmpty()) {
-            tips.add(Triple("👍", "Tout va bien",
-                "Continue d'encoder ta production de temps en temps, surtout aux changements de saison, pour garder des prévisions justes. Un nettoyage par an (au printemps, après le pollen) suffit en général."))
+            tips.add(Triple("👍", L.t("Tout va bien", "Alles in orde"),
+                L.t("Continue d'encoder ta production de temps en temps, surtout aux changements de saison, pour garder des prévisions justes. Un nettoyage par an (au printemps, après le pollen) suffit en général.", "Geef af en toe je productie in, vooral bij seizoenswissels, om de voorspellingen juist te houden. Eén reiniging per jaar (in de lente, na het stuifmeel) volstaat meestal.")))
         }
 
         // Bandeau sur l'accueil si la production est anormalement basse
         if ((n >= 3 && r < 0.8) || drop > 0) {
             homeAlert.visibility = View.VISIBLE
-            homeAlert.text = if (drop > 0) "⚠ Ta production a baissé de $drop % ces derniers jours. Touche pour voir les conseils."
-                else "⚠ Tes panneaux produisent ${(r * 100).roundToInt()} % de ce qu'ils devraient. Touche pour voir les conseils."
+            homeAlert.text = if (drop > 0) L.t("⚠ Ta production a baissé de $drop % ces derniers jours. Touche pour voir les conseils.", "⚠ Je productie is de laatste dagen met $drop % gedaald. Tik voor de adviezen.")
+                else L.t("⚠ Tes panneaux produisent ${(r * 100).roundToInt()} % de ce qu'ils devraient. Touche pour voir les conseils.", "⚠ Je panelen produceren ${(r * 100).roundToInt()} % van wat ze zouden moeten. Tik voor de adviezen.")
         }
 
         val dp = resources.displayMetrics.density
@@ -881,8 +897,9 @@ class MainActivity : Activity() {
         }
         val n = list.size.coerceAtMost(Store.CALIB_WINDOW)
         calSummary.visibility = View.VISIBLE
-        calSummary.text = "Correction ×${String.format(fr, "%.2f", f)} · moyenne sur $n jour${if (n > 1) "s" else ""}" +
-            if (n < 5) "\nAjoute quelques jours de plus pour une correction fiable." else ""
+        calSummary.text = (if (L.nl) "Correctie ×${String.format(fr, "%.2f", f)} · gemiddelde over $n ${if (n > 1) "dagen" else "dag"}"
+            else "Correction ×${String.format(fr, "%.2f", f)} · moyenne sur $n jour${if (n > 1) "s" else ""}") +
+            if (n < 5) L.t("\nAjoute quelques jours de plus pour une correction fiable.", "\nVoeg nog enkele dagen toe voor een betrouwbare correctie.") else ""
 
         val dp = resources.displayMetrics.density
         val fmt = DateTimeFormatter.ofPattern("EEE d MMM", fr)
@@ -902,7 +919,7 @@ class MainActivity : Activity() {
                 textSize = 14f
             })
             texts.addView(TextView(this).apply {
-                text = "Réel ${f1(c.real)} kWh · prévu ${f1(c.base)} kWh"
+                text = L.t("Réel ${f1(c.real)} kWh · prévu ${f1(c.base)} kWh", "Werkelijk ${f1(c.real)} kWh · verwacht ${f1(c.base)} kWh")
                 setTextColor(getColor(R.color.muted))
                 textSize = 12f
             })
@@ -919,7 +936,7 @@ class MainActivity : Activity() {
                 gravity = android.view.Gravity.CENTER
                 setTextColor(getColor(R.color.muted))
                 setBackgroundResource(R.drawable.round_btn)
-                contentDescription = "Supprimer cette saisie"
+                contentDescription = L.t("Supprimer cette saisie", "Deze invoer verwijderen")
                 setOnClickListener {
                     Store.removeCalib(this@MainActivity, c.date)
                     fillFields(); show(); SolarWidget.refreshAll(this@MainActivity)
@@ -984,8 +1001,8 @@ class MainActivity : Activity() {
     private fun applyMeasure(key: String, v: Double) {
         Store.set(this, key, v)
         fillFields()
-        placeOut.text = if (key == "tilt") "Inclinaison enregistrée : ${v.roundToInt()}°"
-            else "Orientation enregistrée : ${v.roundToInt()}° (${MeasureDialog.cardinal(v.roundToInt())})"
+        placeOut.text = if (key == "tilt") L.t("Inclinaison enregistrée : ${v.roundToInt()}°", "Hellingshoek opgeslagen: ${v.roundToInt()}°")
+            else L.t("Orientation enregistrée : ", "Oriëntatie opgeslagen: ") + "${v.roundToInt()}° (${MeasureDialog.cardinal(v.roundToInt())})"
         refresh()
     }
 
@@ -1006,19 +1023,20 @@ class MainActivity : Activity() {
         val d = Store.days(this).find { it.date == date }
         calOut.visibility = View.VISIBLE
         if (value == null || value <= 0.0 || d == null) {
-            calOut.text = "Choisis un jour de la semaine passée et entre une production."
+            calOut.text = L.t("Choisis un jour de la semaine passée et entre une production.", "Kies een dag van de afgelopen week en geef een productie in.")
             return
         }
         val base = Forecast.base(Store.load(this), d)
         if (base <= 0.0) {
-            calOut.text = "Pas de rayonnement prévu ce jour-là, choisis un autre jour."
+            calOut.text = L.t("Pas de rayonnement prévu ce jour-là, choisis un autre jour.", "Geen zoninstraling voorspeld die dag, kies een andere dag.")
             return
         }
         Store.addCalib(this, Calib(date, value, base))
         val n = Store.calibs(this).size.coerceAtMost(Store.CALIB_WINDOW)
         val dayPct = (value / base * 100).roundToInt()
         calOut.text = if (dayPct < 60)
-            "Enregistré. Ce jour-là, tu as produit $dayPct % de la prévision. Si le ciel était dégagé, regarde les conseils du diagnostic ci-dessus."
+            L.t("Enregistré. Ce jour-là, tu as produit $dayPct % de la prévision. Si le ciel était dégagé, regarde les conseils du diagnostic ci-dessus.", "Opgeslagen. Die dag produceerde je $dayPct % van de voorspelling. Was de hemel helder, bekijk dan de adviezen van de diagnose hierboven.")
+        else if (L.nl) "Opgeslagen. Correctie berekend op $n ${if (n > 1) "dagen" else "dag"}."
         else "Enregistré. Correction calculée sur $n jour${if (n > 1) "s" else ""}."
         calKwh.setText("")
         fillFields()
@@ -1034,7 +1052,7 @@ class MainActivity : Activity() {
             Store.clearPlace(this)
         }
         fillFields()
-        placeOut.text = "✓ Réglages enregistrés, prévisions recalculées."
+        placeOut.text = L.t("✓ Réglages enregistrés, prévisions recalculées.", "✓ Instellingen opgeslagen, voorspellingen herberekend.")
         refresh()
     }
 }

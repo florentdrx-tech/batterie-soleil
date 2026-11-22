@@ -29,17 +29,17 @@ object Appliances {
      * Uniquement des appareils gourmands dont on peut décaler l'usage
      * (pas de cuisson ni de petits appareils à la conso négligeable).
      */
-    private val CATALOG = listOf(
-        Appliance("ll40", "🧺", "Lave-linge 40 °C", 0.8, 2.0, true, "le lave-linge"),
-        Appliance("ll60", "🧺", "Lave-linge 60 °C", 1.3, 2.2, false, "le lave-linge 60°"),
-        Appliance("lv", "🍽️", "Lave-vaisselle (éco)", 0.9, 2.0, true, "le lave-vaisselle"),
-        Appliance("sl_res", "🔥", "Séchoir à condensation", 3.5, 2.5, true, "le séchoir"),
-        Appliance("sl_pac", "🌀", "Séchoir pompe à chaleur", 1.5, 0.8, false, "le séchoir"),
-        Appliance("boiler", "🚿", "Boiler électrique (chauffe)", 3.5, 2.4, false, "le boiler"),
-        Appliance("ve", "🚗", "Voiture électrique (+100 km)", 17.0, 3.7, false, "la recharge de la voiture"),
-        Appliance("clim", "❄️", "Climatisation (3 h)", 3.0, 1.0, false, "la clim"),
-        Appliance("piscine", "🏊", "Pompe de piscine (8 h)", 6.0, 0.75, false, "la pompe de piscine"),
-        Appliance("fer", "👕", "Repassage (1 h)", 1.0, 2.0, false, "le repassage")
+    private val CATALOG get() = listOf(
+        Appliance("ll40", "🧺", L.t("Lave-linge 40 °C", "Wasmachine 40 °C"), 0.8, 2.0, true, L.t("le lave-linge", "de wasmachine")),
+        Appliance("ll60", "🧺", L.t("Lave-linge 60 °C", "Wasmachine 60 °C"), 1.3, 2.2, false, L.t("le lave-linge 60°", "de wasmachine op 60°")),
+        Appliance("lv", "🍽️", L.t("Lave-vaisselle (éco)", "Vaatwasser (eco)"), 0.9, 2.0, true, L.t("le lave-vaisselle", "de vaatwasser")),
+        Appliance("sl_res", "🔥", L.t("Séchoir à condensation", "Condensdroogkast"), 3.5, 2.5, true, L.t("le séchoir", "de droogkast")),
+        Appliance("sl_pac", "🌀", L.t("Séchoir pompe à chaleur", "Warmtepompdroogkast"), 1.5, 0.8, false, L.t("le séchoir", "de droogkast")),
+        Appliance("boiler", "🚿", L.t("Boiler électrique (chauffe)", "Elektrische boiler (opwarmen)"), 3.5, 2.4, false, L.t("le boiler", "de boiler")),
+        Appliance("ve", "🚗", L.t("Voiture électrique (+100 km)", "Elektrische auto (+100 km)"), 17.0, 3.7, false, L.t("la recharge de la voiture", "het laden van de auto")),
+        Appliance("clim", "❄️", L.t("Climatisation (3 h)", "Airco (3 u)"), 3.0, 1.0, false, L.t("la clim", "de airco")),
+        Appliance("piscine", "🏊", L.t("Pompe de piscine (8 h)", "Zwembadpomp (8 u)"), 6.0, 0.75, false, L.t("la pompe de piscine", "de zwembadpomp")),
+        Appliance("fer", "👕", L.t("Repassage (1 h)", "Strijken (1 u)"), 1.0, 2.0, false, L.t("le repassage", "het strijken"))
     )
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("soleil", Context.MODE_PRIVATE)
@@ -146,17 +146,17 @@ object Appliances {
         val t = r.planTime ?: return dayName(r.planDay, days)
         val today = java.time.LocalDate.now()
         val now = java.time.LocalDateTime.now()
-        val h = "${t.hour} h"
+        val h = L.t("${t.hour} h", "${t.hour}u")
         val day = when (val diff = java.time.temporal.ChronoUnit.DAYS.between(today, t.toLocalDate()).toInt()) {
-            0 -> if (t.hour >= 17) "ce soir" else "aujourd'hui"
-            1 -> if (t.hour < 7) "cette nuit" else "demain"
+            0 -> if (t.hour >= 17) L.t("ce soir", "vanavond") else L.t("aujourd'hui", "vandaag")
+            1 -> if (t.hour < 7) L.t("cette nuit", "vannacht") else L.t("demain", "morgen")
             else -> java.time.LocalDate.now().plusDays(diff.toLong())
-                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE", java.util.Locale.FRENCH))
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEEE", L.loc))
         }
         return when {
-            !t.isAfter(now.plusMinutes(5)) -> "maintenant"
-            r.planOffPeak -> "$day dès $h"
-            else -> "$day vers $h"
+            !t.isAfter(now.plusMinutes(5)) -> L.t("maintenant", "nu")
+            r.planOffPeak -> L.t("$day dès $h", "$day vanaf $h")
+            else -> L.t("$day vers $h", "$day rond $h")
         }
     }
 
@@ -189,14 +189,14 @@ object Appliances {
     private fun joinFr(l: List<String>): String = when (l.size) {
         0 -> ""
         1 -> l[0]
-        else -> l.dropLast(1).joinToString(", ") + " et " + l.last()
+        else -> l.dropLast(1).joinToString(", ") + L.t(" et ", " en ") + l.last()
     }
 
     private fun dayName(i: Int, days: List<Day>): String = when (i) {
-        0 -> "aujourd'hui"
-        1 -> "demain"
+        0 -> L.t("aujourd'hui", "vandaag")
+        1 -> L.t("demain", "morgen")
         else -> java.time.LocalDate.parse(days[i].date)
-            .format(java.time.format.DateTimeFormatter.ofPattern("EEEE", java.util.Locale.FRENCH))
+            .format(java.time.format.DateTimeFormatter.ofPattern("EEEE", L.loc))
     }
 
     /** Conseil du jour en une phrase, pour l'appli, le widget et la notification du matin. */
@@ -208,17 +208,20 @@ object Appliances {
         val wait = recos.filter { it.advice != Advice.YES && !it.planOffPeak && it.betterDay != null }
             .groupBy { it.betterDay!! }.minByOrNull { it.key }
         val waitTxt = wait?.let { (d, rs) ->
-            "attends ${dayName(d, days)} pour ${joinFr(rs.map { it.app.short }.distinct())}"
+            L.t("attends ${dayName(d, days)} pour ${joinFr(rs.map { it.app.short }.distinct())}",
+                "wacht tot ${dayName(d, days)} voor ${joinFr(rs.map { it.app.short }.distinct())}")
         }
         val off = recos.filter { it.advice == Advice.OFFPEAK }
         val offTxt = if (off.isEmpty()) null else
-            "${joinFr(off.map { it.app.short }.distinct())} en heures creuses (${slotLabel(days, off.first())})"
+            L.t("${joinFr(off.map { it.app.short }.distinct())} en heures creuses (${slotLabel(days, off.first())})",
+                "${joinFr(off.map { it.app.short }.distinct())} tijdens de daluren (${slotLabel(days, off.first())})")
         return when {
-            yes.isNotEmpty() -> "Lance ${joinFr(yes)} aujourd'hui" +
-                listOfNotNull(waitTxt, offTxt?.let { "et $it" }).joinToString(", ", prefix = if (waitTxt != null || offTxt != null) ", " else "")
-            waitTxt != null -> waitTxt.replaceFirstChar { it.uppercase() } + (offTxt?.let { ", et $it" } ?: "")
-            offTxt != null -> "Peu de soleil ces prochains jours : lance $offTxt"
-            else -> "Peu de soleil cette semaine : pas de jour idéal pour les machines"
+            yes.isNotEmpty() -> L.t("Lance ${joinFr(yes)} aujourd'hui", "Zet ${joinFr(yes)} vandaag aan") +
+                (if (t.capa && yes.size > 1) L.t(" (l'un après l'autre)", " (na elkaar)") else "") +
+                listOfNotNull(waitTxt, offTxt?.let { L.t("et $it", "en $it") }).joinToString(", ", prefix = if (waitTxt != null || offTxt != null) ", " else "")
+            waitTxt != null -> waitTxt.replaceFirstChar { it.uppercase() } + (offTxt?.let { L.t(", et $it", ", en $it") } ?: "")
+            offTxt != null -> L.t("Peu de soleil ces prochains jours : lance $offTxt", "Weinig zon de komende dagen: gebruik $offTxt")
+            else -> L.t("Peu de soleil cette semaine : pas de jour idéal pour les machines", "Weinig zon deze week: geen ideale dag voor de toestellen")
         }
     }
 }

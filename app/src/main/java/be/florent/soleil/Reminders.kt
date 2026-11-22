@@ -59,8 +59,8 @@ object Reminders {
         val nm = ctx.getSystemService(NotificationManager::class.java)
         if (nm.getNotificationChannel(CHANNEL) == null) {
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL, "Rappels", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                    description = "Rappels pour encoder le niveau de batterie et la production"
+                NotificationChannel(CHANNEL, L.t("Rappels", "Herinneringen"), NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = L.t("Rappels pour encoder le niveau de batterie et la production", "Herinneringen om batterijniveau en productie in te geven")
                 }
             )
         }
@@ -82,17 +82,17 @@ object Reminders {
         val title: String
         val text: String
         if (kind == MORNING) {
-            title = "Quel est le niveau de ta batterie ?"
+            title = L.t("Quel est le niveau de ta batterie ?", "Wat is het niveau van je batterij?")
             val k = fut.firstOrNull()?.let { Forecast.est(c, it) }
             val tip = Appliances.headline(c, Tariffs.load(ctx), fut, Appliances.all(ctx))
             text = listOfNotNull(
-                k?.let { String.format(java.util.Locale.FRENCH, "☀ %.1f kWh prévus aujourd'hui.", it) },
+                k?.let { String.format(L.loc, L.t("☀ %.1f kWh prévus aujourd'hui.", "☀ %.1f kWh verwacht vandaag."), it) },
                 tip?.let { "💡 $it" },
-                "Touche pour entrer le %."
+                L.t("Touche pour entrer le %.", "Tik om het % in te geven.")
             ).joinToString(" ")
         } else {
-            title = "Combien as-tu produit aujourd'hui ?"
-            text = "Entre la production de ton onduleur pour affiner les prévisions."
+            title = L.t("Combien as-tu produit aujourd'hui ?", "Hoeveel heb je vandaag geproduceerd?")
+            text = L.t("Entre la production de ton onduleur pour affiner les prévisions.", "Geef de productie van je omvormer in om de voorspellingen te verfijnen.")
         }
 
         val open = Intent(ctx, MainActivity::class.java)

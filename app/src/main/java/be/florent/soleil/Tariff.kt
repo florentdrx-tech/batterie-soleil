@@ -12,27 +12,34 @@ data class Tariff(
     val bi: Boolean,
     val r1s: Int, val r1e: Int, val r2s: Int, val r2e: Int,
     val weekend: Boolean,
-    val hp: Double, val hc: Double, val mono: Double, val inj: Double
+    val hp: Double, val hc: Double, val mono: Double, val inj: Double,
+    /** Tarif capacitaire (Flandre) : la facture dépend du pic de puissance mensuel. */
+    val capa: Boolean = false
 )
 
 object Tariffs {
     /** Bi-horaire wallon depuis le 1er janvier 2026 : creuses 22 h–7 h et 11 h–17 h, 7 jours sur 7. */
     val WALLONIE = Tariff(true, 22, 7, 11, 17, false, 0.33, 0.25, 0.30, 0.04)
-    /** Ancien schéma courant : creuses 22 h–7 h en semaine et tout le week-end. */
+    /** Flandre et Bruxelles : creuses 22 h–7 h en semaine et tout le week-end (Fluvius, Sibelga). */
     val CLASSIQUE = WALLONIE.copy(r2s = -1, r2e = -1, weekend = true)
+    /** Certaines communes flamandes : creuses 21 h–6 h en semaine et tout le week-end. */
+    val FLANDRE_21 = CLASSIQUE.copy(r1s = 21, r1e = 6)
+    /** Valeurs par défaut en Flandre (moyennes 2026 indicatives) avec tarif capacitaire. */
+    val VLAANDEREN = CLASSIQUE.copy(hp = 0.36, hc = 0.34, mono = 0.35, inj = 0.03, capa = true)
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("soleil", Context.MODE_PRIVATE)
 
     fun load(ctx: Context): Tariff {
         val p = prefs(ctx)
-        val d = WALLONIE
+        val d = if (L.nl) VLAANDEREN else WALLONIE
         fun dbl(k: String, v: Double) = p.getString(k, null)?.toDoubleOrNull() ?: v
         return Tariff(
             p.getBoolean("tar_bi", d.bi),
             p.getInt("tar_r1s", d.r1s), p.getInt("tar_r1e", d.r1e),
             p.getInt("tar_r2s", d.r2s), p.getInt("tar_r2e", d.r2e),
             p.getBoolean("tar_we", d.weekend),
-            dbl("tar_hp", d.hp), dbl("tar_hc", d.hc), dbl("tar_mono", d.mono), dbl("tar_inj", d.inj)
+            dbl("tar_hp", d.hp), dbl("tar_hc", d.hc), dbl("tar_mono", d.mono), dbl("tar_inj", d.inj),
+            p.getBoolean("tar_capa", d.capa)
         )
     }
 
@@ -44,6 +51,7 @@ object Tariffs {
             .putBoolean("tar_we", t.weekend)
             .putString("tar_hp", t.hp.toString()).putString("tar_hc", t.hc.toString())
             .putString("tar_mono", t.mono.toString()).putString("tar_inj", t.inj.toString())
+            .putBoolean("tar_capa", t.capa)
             .apply()
     }
 

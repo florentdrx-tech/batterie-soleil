@@ -9,13 +9,13 @@
 
     <TextView
         style="@style/CardTitle"
-        android:text="Relever un obstacle" />
+        android:text="@string/t064" />
 
     <TextView
         style="@style/Body"
         android:layout_marginTop="6dp"
         android:gravity="center"
-        android:text="Place-toi au plus près des panneaux (fenêtre de l'étage, pied du toit). Tiens le téléphone debout, écran vers toi, et pointe son dos vers l'obstacle." />
+        android:text="@string/t065" />
 
     <TextView
         android:id="@+id/oValue"
@@ -50,7 +50,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:buttonTint="@color/sun"
-        android:text="C'est un arbre qui perd ses feuilles en hiver"
+        android:text="@string/t066"
         android:textColor="@color/fg"
         android:textSize="14sp"
         android:visibility="gone" />
@@ -69,7 +69,7 @@
             android:layout_weight="1"
             android:background="@drawable/input_bg"
             android:stateListAnimator="@null"
-            android:text="Annuler"
+            android:text="@string/t062"
             android:textAllCaps="false"
             android:textColor="@color/fg"
             android:textSize="15sp" />
