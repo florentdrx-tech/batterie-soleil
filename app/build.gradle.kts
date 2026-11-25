@@ -50,5 +50,5 @@ android {
 
 dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.1")
-    implementation("com.android.billingclient:billing-ktx:8.0.0")
+    implementation("com.android.billingclient:billing:8.0.0")
 }
