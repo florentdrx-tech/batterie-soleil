@@ -69,6 +69,7 @@ object Reminders {
     fun notify(ctx: Context, kind: String) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
         if (!nm.areNotificationsEnabled()) return
+        if (!Pro.isPro(ctx)) return
 
         // Pas de rappel si c'est déjà fait aujourd'hui
         val today = LocalDate.now().toString()

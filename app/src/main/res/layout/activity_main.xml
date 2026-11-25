@@ -52,6 +52,22 @@
                         android:textSize="13sp" />
                 </LinearLayout>
 
+                <TextView
+                    android:id="@+id/proBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/chip_on"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingStart="12dp"
+                    android:paddingTop="7dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="7dp"
+                    android:text="⭐ Pro"
+                    android:textColor="@color/ink"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
                 <ImageButton
                     android:id="@+id/refresh"
                     android:layout_width="46dp"
@@ -196,6 +212,7 @@
 
             <!-- Que lancer ? -->
             <LinearLayout
+                android:id="@+id/cardApps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -303,6 +320,7 @@
 
             <!-- Diagnostic -->
             <LinearLayout
+                android:id="@+id/cardDiag"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -456,8 +474,54 @@
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
+            <!-- Version Pro -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:id="@+id/proTitle"
+                    style="@style/CardTitle" />
+
+                <TextView
+                    android:id="@+id/proText"
+                    style="@style/Body"
+                    android:layout_marginTop="4dp" />
+
+                <Button
+                    android:id="@+id/proBtn"
+                    style="@style/PrimaryButton"
+                    android:layout_marginTop="12dp" />
+
+                <TextView
+                    android:id="@+id/proManage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:textColor="@color/sun"
+                    android:textSize="14sp" />
+
+                <CheckBox
+                    android:id="@+id/proSimFree"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:buttonTint="@color/sun"
+                    android:textColor="@color/muted"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
             <!-- Rappels -->
             <LinearLayout
+                android:id="@+id/cardRem"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -664,6 +728,7 @@
 
             <!-- Tarif -->
             <LinearLayout
+                android:id="@+id/cardTar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -1025,6 +1090,7 @@
 
             <!-- Ombres -->
             <LinearLayout
+                android:id="@+id/cardShade"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"

@@ -146,6 +146,11 @@ class MainActivity : Activity() {
         show()
         refresh()
         UpdateWorker.schedule(this)
+        Pro.onChange = { applyPro(); fillFields(); show(); SolarWidget.refreshAll(this) }
+        Pro.start(this)
+        findViewById<View>(R.id.proBadge).setOnClickListener { Pro.showPaywall(this) }
+        setupProCard()
+        applyPro()
         Reminders.schedule(this)
         handleOpen(intent)
     }
@@ -196,6 +201,131 @@ class MainActivity : Activity() {
                     .showSoftInput(calKwh, InputMethodManager.SHOW_IMPLICIT)
             }
         }
+    }
+
+    // ---------- Version Pro ----------
+
+    private val lockSaved = HashMap<View, Int>()
+
+    /** Masque le contenu d'une carte (sauf son titre) et affiche une invitation à passer à Pro. */
+    private fun lockCard(id: Int, locked: Boolean, teaser: String) {
+        val card = findViewById<LinearLayout>(id)
+        val existing = (0 until card.childCount).map { card.getChildAt(it) }.filter { it.tag == "lockui" }
+        if (!locked) {
+            existing.forEach { card.removeView(it) }
+            (1 until card.childCount).map { card.getChildAt(it) }.forEach { v ->
+                lockSaved.remove(v)?.let { v.visibility = it }
+            }
+            return
+        }
+        if (existing.isNotEmpty()) return
+        (1 until card.childCount).map { card.getChildAt(it) }.forEach { v ->
+            lockSaved[v] = v.visibility
+            v.visibility = View.GONE
+        }
+        val dp = resources.displayMetrics.density
+        card.addView(TextView(this).apply {
+            tag = "lockui"
+            text = "🔒 $teaser"
+            setTextColor(getColor(R.color.muted)); textSize = 13f; setLineSpacing(0f, 1.15f)
+            setPadding(0, (6 * dp).toInt(), 0, 0)
+        })
+        card.addView(Button(this, null, 0, R.style.PrimaryButton).apply {
+            tag = "lockui"
+            text = L.t("⭐ Découvrir Pro", "⭐ Ontdek Pro")
+            setOnClickListener { Pro.showPaywall(this@MainActivity) }
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (52 * dp).toInt()).apply { topMargin = (12 * dp).toInt() })
+    }
+
+    private fun applyPro() {
+        val pro = Pro.isPro(this)
+        findViewById<View>(R.id.proBadge).visibility = if (pro) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.batteryBox).visibility = if (pro) View.VISIBLE else View.GONE
+        lockCard(R.id.cardApps, !pro, L.t(
+            "Quels appareils lancer aujourd'hui, à quelle heure et pour combien : conseils par appareil avec ton tarif.",
+            "Welke toestellen vandaag aanzetten, op welk uur en voor hoeveel: advies per toestel met jouw tarief."))
+        lockCard(R.id.cardDiag, !pro, L.t(
+            "Compare ta production à ce qu'elle devrait être et reçois des conseils quand elle est trop basse.",
+            "Vergelijk je productie met wat ze zou moeten zijn en krijg advies als ze te laag is."))
+        lockCard(R.id.cardRem, !pro, L.t(
+            "Un rappel le matin pour la batterie et le soir pour la production.",
+            "Een herinnering 's ochtends voor de batterij en 's avonds voor de productie."))
+        lockCard(R.id.cardTar, !pro, L.t(
+            "Encode ton tarif (bi-horaire, heures creuses, tarif capacitaire) pour connaître le coût de chaque appareil.",
+            "Geef je tarief in (dag/nacht, daluren, capaciteitstarief) om de kost van elk toestel te kennen."))
+        lockCard(R.id.cardShade, !pro, L.t(
+            "Relève les arbres et bâtiments qui font de l'ombre : la prévision en tient compte selon la saison.",
+            "Meet de bomen en gebouwen op die schaduw werpen: de voorspelling houdt er rekening mee per seizoen."))
+        // Version gratuite : un seul champ de panneaux
+        listOf("p2", "a2").forEach { k ->
+            val f = fields[k]
+            if (f != null) {
+                f.isEnabled = pro
+                val holder = f.parent as? LinearLayout
+                if (holder != null && holder.orientation == LinearLayout.HORIZONTAL) {
+                    holder.alpha = if (pro) 1f else 0.4f
+                    for (j in 0 until holder.childCount) holder.getChildAt(j).isEnabled = pro
+                } else {
+                    f.alpha = if (pro) 1f else 0.4f
+                }
+            }
+        }
+        if (!pro && placeOut.text.isNullOrEmpty()) {
+            placeOut.text = L.t("Version gratuite : un seul champ de panneaux. Si tu as deux orientations, encode toute ta puissance dans le champ 1 ou passe à Pro.",
+                "Gratis versie: één panelenveld. Heb je twee oriëntaties, geef dan je totale vermogen in veld 1 in of ga naar Pro.")
+        }
+        updateProCard()
+    }
+
+    private fun setupProCard() {
+        findViewById<Button>(R.id.proBtn).setOnClickListener { Pro.showPaywall(this) }
+        findViewById<TextView>(R.id.proManage).setOnClickListener {
+            if (Pro.isPro(this) && !Pro.isBeta()) {
+                runCatching { startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(Pro.MANAGE_URL))) }
+            } else {
+                Pro.start(this); Pro.refresh()
+            }
+        }
+        val sim = findViewById<android.widget.CheckBox>(R.id.proSimFree)
+        sim.visibility = if (Pro.isBeta()) View.VISIBLE else View.GONE
+        sim.text = L.t("Mode test : simuler la version gratuite", "Testmodus: gratis versie simuleren")
+        sim.isChecked = Pro.simFree(this)
+        sim.setOnCheckedChangeListener { _, v -> Pro.setSimFree(this, v) }
+    }
+
+    private fun updateProCard() {
+        val pro = Pro.isPro(this)
+        val title = findViewById<TextView>(R.id.proTitle)
+        val text = findViewById<TextView>(R.id.proText)
+        val btn = findViewById<Button>(R.id.proBtn)
+        val manage = findViewById<TextView>(R.id.proManage)
+        if (pro) {
+            title.text = L.t("⭐ Pro actif", "⭐ Pro actief")
+            text.text = if (Pro.isBeta()) L.t("Version de test : toutes les fonctions Pro sont débloquées.", "Testversie: alle Pro-functies zijn ontgrendeld.")
+                else L.t("Merci pour ton soutien ! Ton abonnement se gère dans Google Play.", "Bedankt voor je steun! Je abonnement beheer je in Google Play.")
+            btn.visibility = View.GONE
+            manage.visibility = if (Pro.isBeta()) View.GONE else View.VISIBLE
+            manage.text = L.t("Gérer l'abonnement", "Abonnement beheren")
+        } else {
+            title.text = L.t("Version gratuite", "Gratis versie")
+            text.text = L.t(
+                "Passe à Pro pour la batterie, les conseils d'appareils, les tarifs, les ombres, le diagnostic, deux champs de panneaux et les prévisions sur 7 jours. 14 jours d'essai gratuit, puis ${Pro.price()} par an.",
+                "Ga naar Pro voor de batterij, het toestellenadvies, de tarieven, de schaduw, de diagnose, twee panelenvelden en de voorspelling voor 7 dagen. 14 dagen gratis, daarna ${Pro.price()} per jaar.")
+            btn.visibility = View.VISIBLE
+            btn.text = L.t("⭐ Découvrir Pro", "⭐ Ontdek Pro")
+            manage.visibility = View.VISIBLE
+            manage.text = L.t("Restaurer mes achats", "Aankopen herstellen")
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Pro.refresh()
+    }
+
+    override fun onDestroy() {
+        if (Pro.onChange != null) Pro.onChange = null
+        super.onDestroy()
     }
 
     // ---------- Tarif ----------
@@ -377,7 +507,8 @@ class MainActivity : Activity() {
 
     private fun fillFields() {
         val c = Store.load(this)
-        fields.forEach { (k, e) -> e.setText(fmtField(c.m.getValue(k))) }
+        val raw = Store.load(this, true)
+        fields.forEach { (k, e) -> e.setText(fmtField(raw.m.getValue(k))) }
         subtitle.text = L.t("${place(c)} · ${f1(c.p1 + c.p2)} kWc · batterie ${f1(c.bat)} kWh", "${place(c)} · ${f1(c.p1 + c.p2)} kWp · batterij ${f1(c.bat)} kWh")
         placeOut.text = "📍 ${place(c)} (${String.format(fr, "%.4f, %.4f", c.lat, c.lon)})"
         renderCalibs()
@@ -412,10 +543,14 @@ class MainActivity : Activity() {
         val p = Forecast.battPct(c, k)
         kwh.text = f1(k)
         meta.text = L.t("${sky(t)}  ${f1(t.sun)} h de soleil · ${t.cloud.roundToInt()} % de nuages", "${sky(t)}  ${f1(t.sun)} u zon · ${t.cloud.roundToInt()} % bewolking")
-        val lvl = Store.level(this)
+        val pro = Pro.isPro(this)
+        val lvl = if (pro) Store.level(this) else null
         val end = lvl?.let { Forecast.endLevel(c, t, it.first / 100.0, it.second) }
         val good: Boolean
-        if (lvl != null && end != null) {
+        if (!pro) {
+            verdict.text = Forecast.freeVerdict(c, k)
+            good = k / (c.p1 + c.p2).coerceAtLeast(0.1) >= 1.5
+        } else if (lvl != null && end != null) {
             val start = lvl.first / 100.0
             battery.setLevel(end.toFloat())
             batteryLabel.text = L.t("ce soir · ✎", "vanavond · ✎")
@@ -436,7 +571,8 @@ class MainActivity : Activity() {
         val dateFmt = DateTimeFormatter.ofPattern("d MMM", fr)
         val dp = resources.displayMetrics.density
 
-        fut.forEachIndexed { i, d ->
+        val shown = if (pro) fut else fut.take(2)
+        shown.forEachIndexed { i, d ->
             if (i > 0) {
                 days.addView(View(this).apply { setBackgroundColor(getColor(R.color.line)) },
                     LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (1 * dp).toInt().coerceAtLeast(1)))
@@ -461,14 +597,25 @@ class MainActivity : Activity() {
             row.findViewById<TextView>(R.id.dMeta).text = L.t("${f1(d.sun)} h de soleil", "${f1(d.sun)} u zon")
             row.findViewById<TextView>(R.id.dKwh).text = f1(e)
             row.findViewById<TextView>(R.id.dBatt).apply {
-                text = "🔋 $bp %"
+                text = if (pro) "🔋 $bp %" else ""
                 setTextColor(getColor(if (bp > 0) R.color.batt else R.color.muted))
             }
             days.addView(row)
         }
+        if (!pro && fut.size > 2) {
+            days.addView(View(this).apply { setBackgroundColor(getColor(R.color.line)) },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (1 * dp).toInt().coerceAtLeast(1)))
+            days.addView(TextView(this).apply {
+                text = L.t("🔒 ${fut.size - 2} jours de plus avec Pro", "🔒 ${fut.size - 2} dagen meer met Pro")
+                setTextColor(getColor(R.color.sun)); textSize = 14f
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, (14 * dp).toInt(), 0, (14 * dp).toInt())
+                setOnClickListener { Pro.showPaywall(this@MainActivity) }
+            })
+        }
 
         status.text = L.t("Mis à jour à ", "Bijgewerkt om ") + Store.updatedAt(this) + L.t(" · correction ×", " · correctie ×") + String.format(fr, "%.2f", Forecast.factorFor(c, today))
-        val h = Appliances.headline(c, Tariffs.load(this), fut, Appliances.all(this))
+        val h = if (pro) Appliances.headline(c, Tariffs.load(this), fut, Appliances.all(this)) else null
         tip.visibility = if (h == null) View.GONE else View.VISIBLE
         tip.text = "💡 ${h ?: ""}"
         renderAppliances()
@@ -533,6 +680,7 @@ class MainActivity : Activity() {
     }
 
     private fun renderAppliances() {
+        if (!Pro.isPro(this)) return
         val c = Store.load(this)
         val today = LocalDate.now().toString()
         val fut = Store.days(this).filter { it.date >= today }
@@ -770,6 +918,7 @@ class MainActivity : Activity() {
         val today = LocalDate.now().toString()
         diagCauses.removeAllViews()
         homeAlert.visibility = View.GONE
+        if (!Pro.isPro(this)) return
 
         val (fNow, nSeason) = Forecast.seasonInfo(c, today)
         diagSeason.text = when {

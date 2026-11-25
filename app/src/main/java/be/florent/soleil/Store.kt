@@ -52,9 +52,12 @@ object Store {
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("soleil", Context.MODE_PRIVATE)
 
-    fun load(ctx: Context): Config {
+    /** Réglages de l'installation. Version gratuite : un seul champ (le champ 2 compte pour 0), sauf si raw. */
+    fun load(ctx: Context, raw: Boolean = false): Config {
         val p = prefs(ctx)
-        return Config(DEFAULTS.mapValues { (k, d) -> p.getString(k, null)?.toDoubleOrNull() ?: d }, calibs(ctx))
+        var m = DEFAULTS.mapValues { (k, d) -> p.getString(k, null)?.toDoubleOrNull() ?: d }
+        if (!raw && !Pro.isPro(ctx)) m = m + ("p2" to 0.0)
+        return Config(m, calibs(ctx))
     }
 
     fun save(ctx: Context, values: Map<String, Double>) {
@@ -84,7 +87,7 @@ object Store {
         val raw = rawDays(ctx)
         if (!shaded) return raw
         val obs = obstacles(ctx)
-        if (obs.isEmpty()) return raw
+        if (obs.isEmpty() || !Pro.isPro(ctx)) return raw
         val c = load(ctx)
         return raw.map { Shading.apply(c, obs, it) }
     }

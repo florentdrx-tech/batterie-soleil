@@ -125,6 +125,17 @@ object Forecast {
         }
     }
 
+    /** Version gratuite : qualité de la journée, sans parler de batterie. */
+    fun freeVerdict(c: Config, kwh: Double): String {
+        val perKwc = if (c.p1 + c.p2 > 0) kwh / (c.p1 + c.p2) else 0.0
+        return when {
+            perKwc >= 3.0 -> L.t("☀ Excellente journée solaire", "☀ Uitstekende zonnedag")
+            perKwc >= 1.5 -> L.t("Bonne journée solaire", "Goede zonnedag")
+            perKwc >= 0.5 -> L.t("Journée moyenne", "Gemiddelde dag")
+            else -> L.t("Peu de soleil aujourd'hui", "Weinig zon vandaag")
+        }
+    }
+
     fun verdict(c: Config, kwh: Double): String {
         val surplus = max(0.0, kwh - c.conso)
         return when {

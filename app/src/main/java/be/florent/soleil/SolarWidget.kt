@@ -40,7 +40,9 @@ class SolarWidget : AppWidgetProvider() {
             } else {
                 val t = fut[0]
                 val k = Forecast.est(c, t)
-                val lvl = Store.level(ctx)
+                val pro = Pro.isPro(ctx)
+                val lvl = if (pro) Store.level(ctx) else null
+                v.setViewVisibility(R.id.bar, if (pro) android.view.View.VISIBLE else android.view.View.GONE)
                 val end = lvl?.let { Forecast.endLevel(c, t, it.first / 100.0, it.second) }
                 v.setTextViewText(R.id.title, String.format(L.loc, L.t("Aujourd'hui · ☀ %.1f h · màj %s", "Vandaag · ☀ %.1f u · bijgewerkt %s"), t.sun, Store.updatedAt(ctx)))
                 v.setTextViewText(R.id.kwh, String.format(L.loc, "%.1f kWh", k))
@@ -49,6 +51,10 @@ class SolarWidget : AppWidgetProvider() {
                     v.setTextViewText(R.id.pct, L.t("ce soir ≈ $e %", "vanavond ≈ $e %"))
                     v.setProgressBar(R.id.bar, 100, e, false)
                     v.setTextViewText(R.id.verdict, Forecast.levelVerdict(lvl.first / 100.0, end))
+                } else if (!pro) {
+                    v.setTextViewText(R.id.pct, "")
+                    v.setProgressBar(R.id.bar, 100, 0, false)
+                    v.setTextViewText(R.id.verdict, Forecast.freeVerdict(c, k))
                 } else {
                     val p = (Forecast.battPct(c, k) * 100).roundToInt()
                     v.setTextViewText(R.id.pct, L.t("batterie $p %", "batterij $p %"))
@@ -56,7 +62,7 @@ class SolarWidget : AppWidgetProvider() {
                     v.setTextViewText(R.id.verdict, Forecast.verdict(c, k))
                 }
                 val n = fut.getOrNull(1)
-                val h = Appliances.headline(c, Tariffs.load(ctx), fut, Appliances.all(ctx))
+                val h = if (pro) Appliances.headline(c, Tariffs.load(ctx), fut, Appliances.all(ctx)) else null
                 if (h != null) {
                     v.setTextViewText(R.id.next, "💡 $h")
                 } else if (n != null) {

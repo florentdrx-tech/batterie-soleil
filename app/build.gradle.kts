@@ -15,7 +15,11 @@ android {
         targetSdk = 34
         versionCode = buildNumber
         versionName = "1.0.$buildNumber"
+        // APK de test (GitHub) : Pro débloqué. Version Play Store : compiler avec -PproUnlocked=false
+        buildConfigField("boolean", "PRO_UNLOCKED", (project.findProperty("proUnlocked") ?: "true").toString())
     }
+
+    buildFeatures { buildConfig = true }
 
     // Clé de signature fixe : chaque nouvelle version s'installe par-dessus l'ancienne
     signingConfigs {
@@ -46,4 +50,5 @@ android {
 
 dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
 }
